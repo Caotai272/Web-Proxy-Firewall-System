@@ -1,43 +1,100 @@
 <%- include('partials-header', { title: 'Filter Lab' }) %>
 <section class="page-head">
   <h2>Filter Lab</h2>
-  <p class="lead">Open these links directly in your browser to verify request-stage and response-stage filtering.</p>
+  <p class="lead">Browser-friendly test surface for request-stage and response-stage filtering. Each case maps to a concrete branch in the proxy pipeline.</p>
 </section>
 
-<section class="card lab-grid">
-  <article class="lab-item">
-    <h3>Allowed request</h3>
-    <p>Forwards normally through the proxy.</p>
-    <code><%= proxyBaseUrl %>/proxy?url=http://example.com</code>
-    <p><a href="<%= proxyBaseUrl %>/proxy?url=http://example.com" target="_blank" rel="noreferrer">Open allowed example</a></p>
+<section class="catalog-grid">
+  <article class="card">
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Testing Notes</p>
+        <h3>How To Use This Page</h3>
+        <p class="catalog-lead">Open the examples in a new tab, then verify the resulting row inside the logs page. The preview endpoint is useful when you want a JSON explanation without streaming the whole response.</p>
+      </div>
+    </div>
+    <ul class="stack-list">
+      <li>
+        <strong>Request stage</strong>
+        <span>Domain, URL pattern, extension, and URL keyword rules are evaluated before upstream traffic is allowed.</span>
+      </li>
+      <li>
+        <strong>Response stage</strong>
+        <span>HTML responses can be blocked by keyword, and downloads can be blocked by detected file extension.</span>
+      </li>
+      <li>
+        <strong>Observability</strong>
+        <span>Each action should produce a row in <a href="/logs">Access Logs</a> with stage, status, and latency.</span>
+      </li>
+    </ul>
+    <div class="cta-row">
+      <a class="button-link secondary" href="/logs">Open logs</a>
+      <a class="button-link secondary" href="/dashboard">Open dashboard</a>
+    </div>
   </article>
 
-  <article class="lab-item">
-    <h3>Blocked domain</h3>
-    <p>Request is denied before contacting upstream.</p>
-    <code><%= proxyBaseUrl %>/proxy?url=http://facebook.com</code>
-    <p><a href="<%= proxyBaseUrl %>/proxy?url=http://facebook.com" target="_blank" rel="noreferrer">Open blocked domain</a></p>
-  </article>
+  <div class="lab-grid">
+    <article class="lab-item">
+      <div class="panel-head">
+        <div>
+          <p class="kicker">Allow Flow</p>
+          <h3>Allowed Request</h3>
+          <p>Forwards normally through the proxy and should end with an allow log row.</p>
+        </div>
+      </div>
+      <code><%= proxyBaseUrl %>/proxy?url=http://example.com</code>
+      <a class="button-link" href="<%= proxyBaseUrl %>/proxy?url=http://example.com" target="_blank" rel="noreferrer">Open allowed example</a>
+    </article>
 
-  <article class="lab-item">
-    <h3>Blocked HTML keyword</h3>
-    <p>Upstream page is fetched, then blocked after keyword scan on HTML.</p>
-    <code><%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/blocked-content</code>
-    <p><a href="<%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/blocked-content" target="_blank" rel="noreferrer">Open keyword-block demo</a></p>
-  </article>
+    <article class="lab-item">
+      <div class="panel-head">
+        <div>
+          <p class="kicker">Request Block</p>
+          <h3>Blocked Domain</h3>
+          <p>The request should be denied before any upstream response is returned.</p>
+        </div>
+      </div>
+      <code><%= proxyBaseUrl %>/proxy?url=http://facebook.com</code>
+      <a class="button-link" href="<%= proxyBaseUrl %>/proxy?url=http://facebook.com" target="_blank" rel="noreferrer">Open blocked domain</a>
+    </article>
 
-  <article class="lab-item">
-    <h3>Blocked download extension</h3>
-    <p>Request URL looks harmless, but response headers announce an <code>.exe</code> file and the proxy blocks it.</p>
-    <code><%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/download-installer</code>
-    <p><a href="<%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/download-installer" target="_blank" rel="noreferrer">Open extension-block demo</a></p>
-  </article>
+    <article class="lab-item">
+      <div class="panel-head">
+        <div>
+          <p class="kicker">Response Keyword</p>
+          <h3>Blocked HTML Keyword</h3>
+          <p>The upstream page is fetched, then blocked after the HTML response is scanned.</p>
+        </div>
+      </div>
+      <code><%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/blocked-content</code>
+      <a class="button-link" href="<%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/blocked-content" target="_blank" rel="noreferrer">Open keyword-block demo</a>
+    </article>
+
+    <article class="lab-item">
+      <div class="panel-head">
+        <div>
+          <p class="kicker">Response Extension</p>
+          <h3>Blocked Download Extension</h3>
+          <p>The request path looks safe, but the response advertises an <code>.exe</code> attachment and gets blocked.</p>
+        </div>
+      </div>
+      <code><%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/download-installer</code>
+      <a class="button-link" href="<%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/download-installer" target="_blank" rel="noreferrer">Open extension-block demo</a>
+    </article>
+  </div>
 </section>
 
 <section class="card">
-  <h3>Preview API</h3>
-  <p>Use the preview endpoint to inspect which rule matched without streaming the full response to the browser.</p>
+  <div class="panel-head">
+    <div>
+      <p class="kicker">JSON Preview</p>
+      <h3>Preview API</h3>
+      <p>Inspect the exact decision path without rendering the full proxied response.</p>
+    </div>
+  </div>
   <code><%= proxyBaseUrl %>/filter/preview?url=<%= adminBaseUrl %>/demo/download-installer</code>
-  <p><a href="<%= proxyBaseUrl %>/filter/preview?url=<%= adminBaseUrl %>/demo/download-installer" target="_blank" rel="noreferrer">Open preview JSON</a></p>
+  <div class="cta-row">
+    <a class="button-link secondary" href="<%= proxyBaseUrl %>/filter/preview?url=<%= adminBaseUrl %>/demo/download-installer" target="_blank" rel="noreferrer">Open preview JSON</a>
+  </div>
 </section>
 <%- include('partials-footer') %>

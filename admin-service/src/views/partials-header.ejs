@@ -7,19 +7,35 @@
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
-    <div class="shell">
-      <aside class="sidebar">
-        <div>
-          <p class="eyebrow">Web Proxy Firewall</p>
-          <h1>Admin Console</h1>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/dashboard">
+            <span class="brand-mark">WF</span>
+            <span>
+              <strong>Web Proxy Firewall</strong>
+              <small>Admin Console</small>
+            </span>
+          </a>
+          <nav class="nav">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/rules">Rules</a>
+            <a href="/keywords">Keywords</a>
+            <a href="/extensions">Extensions</a>
+            <a href="/logs">Logs</a>
+            <a href="/filter-lab">Filter Lab</a>
+          </nav>
+          <button
+            type="button"
+            class="theme-toggle"
+            data-theme-toggle
+            aria-label="Toggle dark mode"
+            aria-pressed="false"
+          >
+            <span class="theme-toggle-icon" aria-hidden="true">◐</span>
+            <span class="theme-toggle-label">Dark</span>
+          </button>
         </div>
-        <nav class="nav">
-          <a href="/dashboard">Dashboard</a>
-          <a href="/rules">Rules</a>
-          <a href="/keywords">Keywords</a>
-          <a href="/extensions">Extensions</a>
-          <a href="/logs">Logs</a>
-          <a href="/filter-lab">Filter Lab</a>
-        </nav>
-      </aside>
+      </header>
       <main class="content">
+        <div class="content-inner">

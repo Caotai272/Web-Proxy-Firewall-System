@@ -1,8 +1,9 @@
 <%- include('partials-header', { title: 'Dashboard' }) %>
 <section class="hero">
   <div>
-    <p class="eyebrow">Stage 1</p>
-    <h2>System overview</h2>
+    <p class="eyebrow">Operations Overview</p>
+    <h2>Proxy traffic, rule execution, and recent security events</h2>
+    <p class="lead">A compact developer-facing surface for watching what the proxy allowed, blocked, and how the filtering pipeline behaved over time.</p>
   </div>
 </section>
 
@@ -27,7 +28,13 @@
 
 <section class="insight-grid">
   <article class="card">
-    <h3>Traffic Summary</h3>
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Database Summary</p>
+        <h3>Traffic Summary</h3>
+        <p>Core operational counters pulled directly from PostgreSQL.</p>
+      </div>
+    </div>
     <dl class="stat-list">
       <div><dt>Allow</dt><dd><%= stats.logSummary.overview.allow_logs %></dd></div>
       <div><dt>Block</dt><dd><%= stats.logSummary.overview.block_logs %></dd></div>
@@ -39,7 +46,13 @@
   </article>
 
   <article class="card">
-    <h3>Top Blocked Domains</h3>
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Block Hotspots</p>
+        <h3>Top Blocked Domains</h3>
+        <p>Domains that generated the most denied traffic in recent logs.</p>
+      </div>
+    </div>
     <ul class="rank-list">
       <% stats.logSummary.topBlockedDomains.forEach((item) => { %>
         <li><span><%= item.domain %></span><strong><%= item.total %></strong></li>
@@ -53,7 +66,13 @@
 
 <section class="insight-grid">
   <article class="card">
-    <h3>Rule Stages</h3>
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Filter Pipeline</p>
+        <h3>Rule Stages</h3>
+        <p>Which stage in the proxy pipeline produced the final decision.</p>
+      </div>
+    </div>
     <ul class="rank-list">
       <% stats.logSummary.byRuleStage.forEach((item) => { %>
         <li><span><%= item.rule_stage %></span><strong><%= item.total %></strong></li>
@@ -65,12 +84,18 @@
   </article>
 
   <article class="card">
-    <h3>Recent Blocked Events</h3>
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Recent Incidents</p>
+        <h3>Recent Blocked Events</h3>
+        <p>The newest blocked requests recorded by the logging layer.</p>
+      </div>
+    </div>
     <ul class="event-list">
       <% stats.logSummary.recentBlocked.forEach((item) => { %>
         <li>
           <strong><%= item.domain || 'unknown-domain' %></strong>
-          <span><%= item.request_method %> · <%= item.matched_rule || item.blocked_reason || 'blocked' %></span>
+          <span><%= item.request_method %> - <%= item.matched_rule || item.blocked_reason || 'blocked' %></span>
         </li>
       <% }) %>
       <% if (stats.logSummary.recentBlocked.length === 0) { %>

@@ -1,29 +1,42 @@
 <%- include('partials-header', { title: 'Rules' }) %>
 <section class="page-head">
   <h2>Rules</h2>
+  <p class="lead">Current allow and block rules that drive the request-stage filtering pipeline.</p>
 </section>
 <section class="card table-card">
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Type</th>
-        <th>Target</th>
-        <th>Action</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% rules.forEach((rule) => { %>
+  <div class="panel-head">
+    <div>
+      <p class="kicker">Database Rules</p>
+      <h3>Structured Rule Set</h3>
+      <p class="table-note">These entries are loaded by the proxy before it evaluates each request.</p>
+    </div>
+  </div>
+  <div class="table-scroller">
+    <table class="table-main">
+      <thead>
         <tr>
-          <td><%= rule.id %></td>
-          <td><%= rule.type %></td>
-          <td><%= rule.target %></td>
-          <td><%= rule.action %></td>
-          <td><%= rule.is_active ? 'active' : 'inactive' %></td>
+          <th>Rule</th>
+          <th>Type</th>
+          <th>Action</th>
+          <th>Status</th>
         </tr>
-      <% }) %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% rules.forEach((rule) => { %>
+          <tr>
+            <td>
+              <div class="cell-title">
+                <strong class="mono"><%= rule.target %></strong>
+                <span class="cell-meta">Rule #<%= rule.id %></span>
+              </div>
+            </td>
+            <td><%= rule.type %></td>
+            <td><span class="status-badge <%= rule.action %>"><%= rule.action %></span></td>
+            <td><span class="status-badge <%= rule.is_active ? 'active' : 'inactive' %>"><%= rule.is_active ? 'active' : 'inactive' %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
 </section>
 <%- include('partials-footer') %>

@@ -1,8 +1,17 @@
 <%- include('partials-header', { title: 'Logs' }) %>
 <section class="page-head">
   <h2>Access Logs</h2>
+  <p class="lead">Search and inspect proxy decisions, upstream metadata, and latency directly from the database.</p>
 </section>
+
 <section class="card filter-card">
+  <div class="panel-head">
+    <div>
+      <p class="kicker">Query Builder</p>
+      <h3>Filter Log Stream</h3>
+      <p>Scope the dataset by decision, method, domain, or matched rule text.</p>
+    </div>
+  </div>
   <form class="filter-form" method="GET" action="/logs">
     <label>
       <span>Decision</span>
@@ -57,42 +66,57 @@
 </section>
 
 <section class="card table-card">
-  <table>
-    <thead>
-      <tr>
-        <th>Time</th>
-        <th>Method</th>
-        <th>Stage</th>
-        <th>Domain</th>
-        <th>Decision</th>
-        <th>Rule</th>
-        <th>Status</th>
-        <th>Upstream</th>
-        <th>Extension</th>
-        <th>Latency</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% logs.forEach((item) => { %>
+  <div class="panel-head">
+    <div>
+      <p class="kicker">Recent Rows</p>
+      <h3>Structured Access Log</h3>
+      <p class="table-note">Each row reflects the final proxy decision stored in PostgreSQL, including stage, upstream response, extension detection, and latency.</p>
+    </div>
+  </div>
+  <div class="table-scroller">
+    <table class="table-main">
+      <thead>
         <tr>
-          <td><%= item.created_at %></td>
-          <td><%= item.request_method %></td>
-          <td><%= item.rule_stage || '-' %></td>
-          <td><%= item.domain %></td>
-          <td><%= item.decision %></td>
-          <td><%= item.matched_rule || '-' %></td>
-          <td><%= item.status_code %></td>
-          <td><%= item.upstream_status || '-' %></td>
-          <td><%= item.detected_extension || '-' %></td>
-          <td><%= item.latency_ms || 0 %> ms</td>
+          <th>Request</th>
+          <th>Decision</th>
+          <th>Stage</th>
+          <th>Status</th>
+          <th>Extension</th>
+          <th>Latency</th>
         </tr>
-      <% }) %>
-      <% if (logs.length === 0) { %>
-        <tr>
-          <td colspan="10">No logs match the current filters.</td>
-        </tr>
-      <% } %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% logs.forEach((item) => { %>
+          <tr>
+            <td>
+              <div class="cell-title">
+                <strong><%= item.domain || 'unknown-domain' %></strong>
+                <span class="cell-meta mono"><%= item.request_method %> <%= item.url %></span>
+                <span class="cell-meta">Logged at <%= item.created_at %></span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge <%= item.decision %>"><%= item.decision %></span>
+              <div class="cell-meta"><%= item.matched_rule || 'no matched rule' %></div>
+            </td>
+            <td><%= item.rule_stage || '-' %></td>
+            <td>
+              <div class="cell-title">
+                <strong><%= item.status_code %></strong>
+                <span class="cell-meta">Upstream: <%= item.upstream_status || '-' %></span>
+              </div>
+            </td>
+            <td><%= item.detected_extension || '-' %></td>
+            <td><%= item.latency_ms || 0 %> ms</td>
+          </tr>
+        <% }) %>
+        <% if (logs.length === 0) { %>
+          <tr>
+            <td colspan="6">No logs match the current filters.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 </section>
 <%- include('partials-footer') %>

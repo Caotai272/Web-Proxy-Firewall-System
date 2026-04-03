@@ -1,25 +1,38 @@
 <%- include('partials-header', { title: 'Keywords' }) %>
 <section class="page-head">
   <h2>Keywords</h2>
+  <p class="lead">Keyword list used for URL inspection and HTML response scanning.</p>
 </section>
 <section class="card table-card">
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Keyword</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% keywords.forEach((item) => { %>
+  <div class="panel-head">
+    <div>
+      <p class="kicker">Content Filters</p>
+      <h3>Keyword Catalogue</h3>
+      <p class="table-note">These values can trigger blocks in both request and response analysis.</p>
+    </div>
+  </div>
+  <div class="table-scroller">
+    <table class="table-main">
+      <thead>
         <tr>
-          <td><%= item.id %></td>
-          <td><%= item.keyword %></td>
-          <td><%= item.description %></td>
+          <th>Keyword</th>
+          <th>Description</th>
         </tr>
-      <% }) %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% keywords.forEach((item) => { %>
+          <tr>
+            <td>
+              <div class="cell-title">
+                <strong class="mono"><%= item.keyword %></strong>
+                <span class="cell-meta">Keyword #<%= item.id %></span>
+              </div>
+            </td>
+            <td><%= item.description %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
 </section>
 <%- include('partials-footer') %>
