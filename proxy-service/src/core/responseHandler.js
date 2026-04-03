@@ -15,10 +15,20 @@ function applyResponseHeaders(res, headers) {
   });
 }
 
+function sendResponseBody(res, statusCode, body) {
+  if (typeof res.status === 'function') {
+    res.status(statusCode).send(body);
+    return;
+  }
+
+  res.statusCode = statusCode;
+  res.end(body);
+}
+
 function handleResponse(res, response) {
   applyResponseHeaders(res, response.headers);
   res.setHeader('x-proxy-target', response.finalUrl);
-  res.status(response.status).send(response.body);
+  sendResponseBody(res, response.status, response.body);
 }
 
 module.exports = {

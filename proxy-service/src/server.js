@@ -1,27 +1,16 @@
 require('dotenv').config();
 
 const express = require('express');
-const { parseRequestUrl } = require('./core/requestParser');
-const { forwardRequest } = require('./core/forwarder');
-const { handleResponse } = require('./core/responseHandler');
+const { startProxyServer } = require('./core/proxyServer');
 const { getDbTime } = require('./db/client');
 const { getClientIp } = require('./utils/http');
-const { logAccess } = require('./services/logService');
-const { evaluateRules, inspectResponseContent } = require('./services/ruleService');
+const { processHttpProxyRequest } = require('./core/proxyRequestProcessor');
 const { renderBlockPage } = require('./services/blockPageService');
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 
 app.use(express.raw({ type: '*/*', limit: '1mb' }));
-
-async function safeLog(entry) {
-  try {
-    await logAccess(entry);
-  } catch (error) {
-    console.error('Failed to write access log:', error.message);
-  }
-}
 
 app.get('/health', async (req, res) => {
   try {
@@ -50,88 +39,37 @@ app.get('/block-preview', (req, res) => {
 });
 
 app.all('/proxy', async (req, res) => {
-  let parsedRequest = null;
-  const clientIp = getClientIp(req);
+  const result = await processHttpProxyRequest({
+    method: req.method,
+    targetUrl: req.query.url,
+    headers: req.headers,
+    body: req.body,
+    clientIp: getClientIp(req)
+  });
 
-  try {
-    parsedRequest = parseRequestUrl(req.query.url);
-    const ruleDecision = await evaluateRules(parsedRequest);
+  if (result.kind === 'forward') {
+    res.setHeader('x-proxy-mode', 'query');
+    res.setHeader('x-proxy-target', result.response.finalUrl);
+    res.status(result.response.status);
+    Object.entries(result.response.headers).forEach(([key, value]) => {
+      if (['content-length', 'transfer-encoding', 'connection', 'content-encoding'].includes(key.toLowerCase())) {
+        return;
+      }
 
-    if (ruleDecision.decision === 'block') {
-      await safeLog({
-        requestMethod: req.method,
-        url: parsedRequest.url,
-        domain: parsedRequest.domain,
-        clientIp,
-        decision: 'block',
-        matchedRule: ruleDecision.matchedRule,
-        statusCode: 403,
-        blockedReason: ruleDecision.matchedRule
-      });
-
-      return res.status(403).type('html').send(renderBlockPage({
-        title: 'Access Blocked',
-        message: ruleDecision.matchedRule || 'Blocked by an active rule.'
-      }));
-    }
-
-    const forwardedResponse = await forwardRequest({
-      method: req.method,
-      targetUrl: parsedRequest.url,
-      headers: req.headers,
-      body: req.method === 'GET' || req.method === 'HEAD' ? undefined : req.body
+      res.setHeader(key, value);
     });
 
-    const responseDecision = inspectResponseContent(forwardedResponse, ruleDecision.keywords);
-    if (responseDecision.decision === 'block') {
-      await safeLog({
-        requestMethod: req.method,
-        url: parsedRequest.url,
-        domain: parsedRequest.domain,
-        clientIp,
-        decision: 'block',
-        matchedRule: responseDecision.matchedRule,
-        statusCode: 403,
-        blockedReason: responseDecision.matchedRule
-      });
-
-      return res.status(403).type('html').send(renderBlockPage({
-        title: 'Response Blocked',
-        message: responseDecision.matchedRule
-      }));
-    }
-
-    await safeLog({
-      requestMethod: req.method,
-      url: parsedRequest.url,
-      domain: parsedRequest.domain,
-      clientIp,
-      decision: 'allow',
-      matchedRule: ruleDecision.matchedRule,
-      statusCode: forwardedResponse.status,
-      blockedReason: null
-    });
-
-    return handleResponse(res, forwardedResponse);
-  } catch (error) {
-    const statusCode = error.name === 'TimeoutError' ? 504 : 400;
-
-    await safeLog({
-      requestMethod: req.method,
-      url: parsedRequest ? parsedRequest.url : String(req.query.url || ''),
-      domain: parsedRequest ? parsedRequest.domain : null,
-      clientIp,
-      decision: 'block',
-      matchedRule: 'proxy:error',
-      statusCode,
-      blockedReason: error.message
-    });
-
-    return res.status(statusCode).json({
-      status: 'error',
-      message: error.message
-    });
+    return res.send(result.response.body);
   }
+
+  if (result.kind === 'block') {
+    return res.status(result.statusCode).type('html').send(result.body);
+  }
+
+  return res.status(result.statusCode).json({
+    status: 'error',
+    message: result.message
+  });
 });
 
 app.get('/', (req, res) => {
@@ -172,8 +110,9 @@ app.get('/', (req, res) => {
       <body>
         <section class="card">
           <p>Proxy service is running.</p>
-          <h1>Basic forwarding flow is ready</h1>
-          <p>Use <code>/proxy?url=http://admin-service:4000/health</code> to forward a request through the proxy container.</p>
+          <h1>HTTP proxy and CONNECT tunnel are ready</h1>
+          <p>Use this service as an HTTP proxy at <code>http://localhost:${port}</code> or call the query helper below for direct testing.</p>
+          <p>Query helper: <code>/proxy?url=http://admin-service:4000/health</code></p>
           <p>Local example: <a href="/proxy?url=http://admin-service:4000/health">forward to admin-service health</a></p>
           <p>Blocked example: <a href="/proxy?url=http://facebook.com">facebook.com</a></p>
         </section>
@@ -182,6 +121,4 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.listen(port, () => {
-  console.log(`proxy-service listening on port ${port}`);
-});
+startProxyServer({ app, port });

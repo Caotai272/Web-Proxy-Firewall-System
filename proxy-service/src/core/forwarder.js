@@ -30,7 +30,7 @@ async function forwardRequest({ method, targetUrl, headers, body }) {
     method,
     headers: buildForwardHeaders(headers),
     body,
-    redirect: 'follow',
+    redirect: 'manual',
     signal: AbortSignal.timeout(15000)
   });
 

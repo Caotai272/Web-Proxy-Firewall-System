@@ -2,7 +2,7 @@
 
 The system uses a three-service architecture:
 
-- `proxy-service`: receives browser traffic, evaluates filtering rules, and later forwards requests.
+- `proxy-service`: receives browser traffic, evaluates filtering rules, forwards HTTP requests, and handles HTTPS `CONNECT` tunnels.
 - `admin-service`: exposes management pages and APIs for rules, logs, and dashboards.
 - `postgres`: stores configuration and access history.
 

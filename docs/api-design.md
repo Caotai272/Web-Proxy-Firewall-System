@@ -12,5 +12,6 @@
 
 - `GET /health`: service health and database connectivity
 - `GET /block-preview`: preview the block page template
-
-Later phases will add proxy request handling, CRUD endpoints, and more detailed filtering APIs.
+- `ALL /proxy?url=<target>`: direct helper endpoint for testing proxy forwarding
+- `HTTP proxy mode`: accepts absolute-form HTTP requests from browser or client proxy settings
+- `CONNECT <host>:443`: accepts HTTPS tunnel requests and applies domain-based filtering before opening the tunnel
