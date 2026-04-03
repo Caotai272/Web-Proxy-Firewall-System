@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: web-proxy-firewall-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  proxy-service:
+    build:
+      context: ./proxy-service
+    container_name: web-proxy-firewall-proxy
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+      - ./proxy-service/.env
+    environment:
+      PORT: ${PROXY_PORT}
+      DATABASE_URL: ${PROXY_DATABASE_URL}
+    ports:
+      - "${PROXY_PORT}:${PROXY_PORT}"
+
+  admin-service:
+    build:
+      context: ./admin-service
+    container_name: web-proxy-firewall-admin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+      - ./admin-service/.env
+    environment:
+      PORT: ${ADMIN_PORT}
+      DATABASE_URL: ${ADMIN_DATABASE_URL}
+    ports:
+      - "${ADMIN_PORT}:${ADMIN_PORT}"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,156 @@
+:root {
+  --bg: #f3efe7;
+  --bg-strong: #d9c7ae;
+  --panel: rgba(255, 250, 244, 0.9);
+  --panel-strong: #fffaf4;
+  --ink: #261c15;
+  --muted: #6d5d50;
+  --accent: #b04a2b;
+  --accent-soft: #e6b28d;
+  --line: rgba(38, 28, 21, 0.1);
+  --shadow: 0 24px 60px rgba(38, 28, 21, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(176, 74, 43, 0.14), transparent 30%),
+    linear-gradient(160deg, var(--bg) 0%, var(--bg-strong) 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  padding: 32px 24px;
+  background: rgba(38, 28, 21, 0.94);
+  color: #f8f1e8;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar h1 {
+  margin: 8px 0 0;
+  font-size: 2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: var(--accent-soft);
+}
+
+.nav {
+  display: grid;
+  gap: 10px;
+}
+
+.nav a {
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 241, 232, 0.12);
+  border-radius: 12px;
+}
+
+.nav a:hover {
+  background: rgba(255, 241, 232, 0.08);
+}
+
+.content {
+  padding: 32px;
+}
+
+.hero,
+.page-head {
+  margin-bottom: 24px;
+}
+
+.hero h2,
+.page-head h2 {
+  margin: 8px 0 0;
+  font-size: clamp(2rem, 3vw, 3.2rem);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.metrics .card strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 2.4rem;
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 920px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    gap: 24px;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .content {
+    padding: 20px;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}

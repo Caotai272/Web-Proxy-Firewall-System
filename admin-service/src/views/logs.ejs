@@ -1,0 +1,29 @@
+<%- include('partials-header', { title: 'Logs' }) %>
+<section class="page-head">
+  <h2>Access Logs</h2>
+</section>
+<section class="card table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Method</th>
+        <th>Domain</th>
+        <th>Decision</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% logs.forEach((item) => { %>
+        <tr>
+          <td><%= item.created_at %></td>
+          <td><%= item.request_method %></td>
+          <td><%= item.domain %></td>
+          <td><%= item.decision %></td>
+          <td><%= item.status_code %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+<%- include('partials-footer') %>

@@ -1,0 +1,27 @@
+<%- include('partials-header', { title: 'Dashboard' }) %>
+<section class="hero">
+  <div>
+    <p class="eyebrow">Stage 1</p>
+    <h2>System overview</h2>
+  </div>
+</section>
+
+<section class="metrics">
+  <article class="card">
+    <span>Rules</span>
+    <strong><%= stats.rules %></strong>
+  </article>
+  <article class="card">
+    <span>Keywords</span>
+    <strong><%= stats.keywords %></strong>
+  </article>
+  <article class="card">
+    <span>Extensions</span>
+    <strong><%= stats.extensions %></strong>
+  </article>
+  <article class="card">
+    <span>Logs</span>
+    <strong><%= stats.logs %></strong>
+  </article>
+</section>
+<%- include('partials-footer') %>

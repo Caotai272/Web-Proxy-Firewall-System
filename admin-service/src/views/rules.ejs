@@ -1,0 +1,29 @@
+<%- include('partials-header', { title: 'Rules' }) %>
+<section class="page-head">
+  <h2>Rules</h2>
+</section>
+<section class="card table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Target</th>
+        <th>Action</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rules.forEach((rule) => { %>
+        <tr>
+          <td><%= rule.id %></td>
+          <td><%= rule.type %></td>
+          <td><%= rule.target %></td>
+          <td><%= rule.action %></td>
+          <td><%= rule.is_active ? 'active' : 'inactive' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+<%- include('partials-footer') %>

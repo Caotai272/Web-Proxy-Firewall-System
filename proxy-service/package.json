@@ -1,0 +1,14 @@
+{
+  "name": "proxy-service",
+  "version": "1.0.0",
+  "description": "Web proxy firewall proxy service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "pg": "^8.16.3"
+  }
+}
