@@ -24,4 +24,62 @@
     <strong><%= stats.logs %></strong>
   </article>
 </section>
+
+<section class="insight-grid">
+  <article class="card">
+    <h3>Traffic Summary</h3>
+    <dl class="stat-list">
+      <div><dt>Allow</dt><dd><%= stats.logSummary.overview.allow_logs %></dd></div>
+      <div><dt>Block</dt><dd><%= stats.logSummary.overview.block_logs %></dd></div>
+      <div><dt>CONNECT</dt><dd><%= stats.logSummary.overview.connect_logs %></dd></div>
+      <div><dt>Last 24h</dt><dd><%= stats.logSummary.overview.logs_last_24h %></dd></div>
+      <div><dt>Avg latency</dt><dd><%= stats.logSummary.overview.avg_latency_ms %> ms</dd></div>
+      <div><dt>Payload sent</dt><dd><%= stats.logSummary.overview.total_response_bytes %> B</dd></div>
+    </dl>
+  </article>
+
+  <article class="card">
+    <h3>Top Blocked Domains</h3>
+    <ul class="rank-list">
+      <% stats.logSummary.topBlockedDomains.forEach((item) => { %>
+        <li><span><%= item.domain %></span><strong><%= item.total %></strong></li>
+      <% }) %>
+      <% if (stats.logSummary.topBlockedDomains.length === 0) { %>
+        <li><span>No blocked domains yet</span><strong>0</strong></li>
+      <% } %>
+    </ul>
+  </article>
+</section>
+
+<section class="insight-grid">
+  <article class="card">
+    <h3>Rule Stages</h3>
+    <ul class="rank-list">
+      <% stats.logSummary.byRuleStage.forEach((item) => { %>
+        <li><span><%= item.rule_stage %></span><strong><%= item.total %></strong></li>
+      <% }) %>
+      <% if (stats.logSummary.byRuleStage.length === 0) { %>
+        <li><span>No rule-stage data</span><strong>0</strong></li>
+      <% } %>
+    </ul>
+  </article>
+
+  <article class="card">
+    <h3>Recent Blocked Events</h3>
+    <ul class="event-list">
+      <% stats.logSummary.recentBlocked.forEach((item) => { %>
+        <li>
+          <strong><%= item.domain || 'unknown-domain' %></strong>
+          <span><%= item.request_method %> · <%= item.matched_rule || item.blocked_reason || 'blocked' %></span>
+        </li>
+      <% }) %>
+      <% if (stats.logSummary.recentBlocked.length === 0) { %>
+        <li>
+          <strong>No blocked events yet</strong>
+          <span>Generate traffic through the proxy to populate this section.</span>
+        </li>
+      <% } %>
+    </ul>
+  </article>
+</section>
 <%- include('partials-footer') %>

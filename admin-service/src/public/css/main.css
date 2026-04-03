@@ -98,6 +98,10 @@ a {
   gap: 16px;
 }
 
+.compact-metrics .card strong {
+  font-size: 1.8rem;
+}
+
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -105,6 +109,111 @@ a {
   box-shadow: var(--shadow);
   padding: 24px;
   backdrop-filter: blur(10px);
+}
+
+.insight-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+}
+
+.filter-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.filter-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-form span {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.filter-form input,
+.filter-form select,
+.filter-form button {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink);
+  font: inherit;
+}
+
+.filter-form button {
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff7f0;
+}
+
+.stat-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.stat-list div {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid var(--line);
+}
+
+.stat-list dt {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-list dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.rank-list,
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.rank-list li,
+.event-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.event-list li {
+  flex-direction: column;
+}
+
+.event-list span {
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .metrics .card strong {
@@ -179,6 +288,14 @@ th {
   .lab-grid {
     grid-template-columns: 1fr;
   }
+
+  .insight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-form {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 560px) {
@@ -187,6 +304,14 @@ th {
   }
 
   .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-form {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-list {
     grid-template-columns: 1fr;
   }
 }

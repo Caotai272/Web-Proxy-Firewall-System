@@ -8,6 +8,7 @@ router.get('/dashboard/stats', dashboardController.getDashboardStats);
 router.get('/rules', dashboardController.getRules);
 router.get('/keywords', dashboardController.getKeywords);
 router.get('/extensions', dashboardController.getExtensions);
+router.get('/logs/summary', dashboardController.getLogSummary);
 router.get('/logs', dashboardController.getLogs);
 
 module.exports = router;

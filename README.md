@@ -40,6 +40,12 @@ docker compose up --build
 - Preview filter decisions with `GET /filter/preview?url=<target>`
 - Persist access logs to PostgreSQL
 
+## Logging And Database
+
+- Access logs now store filter stage, upstream status, response metadata, payload size, and latency
+- Admin dashboard reads aggregated DB summaries such as blocked domains, rule-stage counts, and recent blocked events
+- `/logs` supports DB-backed filtering by decision, method, domain, query text, and limit
+
 ## Next Phases
 
 - Implement admin CRUD and dashboard charts

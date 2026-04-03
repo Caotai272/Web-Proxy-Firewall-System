@@ -4,18 +4,20 @@ const extensionRepository = require('../repositories/extensionRepository');
 const logRepository = require('../repositories/logRepository');
 
 async function getStats() {
-  const [rules, keywords, extensions, logs] = await Promise.all([
+  const [rules, keywords, extensions, logs, logSummary] = await Promise.all([
     ruleRepository.countRules(),
     keywordRepository.countKeywords(),
     extensionRepository.countExtensions(),
-    logRepository.countLogs()
+    logRepository.countLogs(),
+    logRepository.getLogSummary()
   ]);
 
   return {
     rules,
     keywords,
     extensions,
-    logs
+    logs,
+    logSummary
   };
 }
 
@@ -31,8 +33,12 @@ async function getExtensions() {
   return extensionRepository.listExtensions();
 }
 
-async function getLogs() {
-  return logRepository.listLogs();
+async function getLogs(filters) {
+  return logRepository.listLogs(filters);
+}
+
+async function getLogSummary() {
+  return logRepository.getLogSummary();
 }
 
 module.exports = {
@@ -40,5 +46,6 @@ module.exports = {
   getRules,
   getKeywords,
   getExtensions,
-  getLogs
+  getLogs,
+  getLogSummary
 };

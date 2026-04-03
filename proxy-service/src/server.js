@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const { startProxyServer } = require('./core/proxyServer');
 const { getDbTime } = require('./db/client');
+const { ensureAccessLogSchema } = require('./db/schema');
 const { getClientIp } = require('./utils/http');
 const { classifyProxyError, processHttpProxyRequest, previewProxyRequest } = require('./core/proxyRequestProcessor');
 const { renderBlockPage } = require('./services/blockPageService');
@@ -139,4 +140,12 @@ app.get('/', (req, res) => {
   `);
 });
 
-startProxyServer({ app, port });
+async function bootstrap() {
+  await ensureAccessLogSchema();
+  startProxyServer({ app, port });
+}
+
+bootstrap().catch((error) => {
+  console.error('Failed to start proxy-service:', error);
+  process.exit(1);
+});

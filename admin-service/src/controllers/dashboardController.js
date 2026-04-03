@@ -55,8 +55,18 @@ async function renderExtensions(req, res, next) {
 
 async function renderLogs(req, res, next) {
   try {
-    const logs = await dashboardService.getLogs();
-    res.render('logs', { logs });
+    const filters = {
+      decision: req.query.decision || '',
+      method: req.query.method || '',
+      domain: req.query.domain || '',
+      query: req.query.query || '',
+      limit: req.query.limit || '50'
+    };
+    const [logs, summary] = await Promise.all([
+      dashboardService.getLogs(filters),
+      dashboardService.getLogSummary()
+    ]);
+    res.render('logs', { logs, filters, summary });
   } catch (error) {
     next(error);
   }
@@ -127,7 +137,26 @@ async function getExtensions(req, res, next) {
 
 async function getLogs(req, res, next) {
   try {
-    res.json(await dashboardService.getLogs());
+    const filters = {
+      decision: req.query.decision || '',
+      method: req.query.method || '',
+      domain: req.query.domain || '',
+      query: req.query.query || '',
+      limit: req.query.limit || '50'
+    };
+    const [items, summary] = await Promise.all([
+      dashboardService.getLogs(filters),
+      dashboardService.getLogSummary()
+    ]);
+    res.json({ items, summary, filters });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getLogSummary(req, res, next) {
+  try {
+    res.json(await dashboardService.getLogSummary());
   } catch (error) {
     next(error);
   }
@@ -147,5 +176,6 @@ module.exports = {
   getRules,
   getKeywords,
   getExtensions,
-  getLogs
+  getLogs,
+  getLogSummary
 };

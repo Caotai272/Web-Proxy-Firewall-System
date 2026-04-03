@@ -2,15 +2,74 @@
 <section class="page-head">
   <h2>Access Logs</h2>
 </section>
+<section class="card filter-card">
+  <form class="filter-form" method="GET" action="/logs">
+    <label>
+      <span>Decision</span>
+      <select name="decision">
+        <option value="">All</option>
+        <option value="allow" <%= filters.decision === 'allow' ? 'selected' : '' %>>Allow</option>
+        <option value="block" <%= filters.decision === 'block' ? 'selected' : '' %>>Block</option>
+      </select>
+    </label>
+    <label>
+      <span>Method</span>
+      <select name="method">
+        <option value="">All</option>
+        <option value="GET" <%= filters.method === 'GET' ? 'selected' : '' %>>GET</option>
+        <option value="POST" <%= filters.method === 'POST' ? 'selected' : '' %>>POST</option>
+        <option value="CONNECT" <%= filters.method === 'CONNECT' ? 'selected' : '' %>>CONNECT</option>
+      </select>
+    </label>
+    <label>
+      <span>Domain</span>
+      <input type="text" name="domain" value="<%= filters.domain %>" placeholder="facebook.com" />
+    </label>
+    <label>
+      <span>Search</span>
+      <input type="text" name="query" value="<%= filters.query %>" placeholder="matched rule or URL" />
+    </label>
+    <label>
+      <span>Limit</span>
+      <input type="number" min="1" max="200" name="limit" value="<%= filters.limit %>" />
+    </label>
+    <button type="submit">Apply filters</button>
+  </form>
+</section>
+
+<section class="metrics compact-metrics">
+  <article class="card">
+    <span>Total Logs</span>
+    <strong><%= summary.overview.total_logs %></strong>
+  </article>
+  <article class="card">
+    <span>Blocked</span>
+    <strong><%= summary.overview.block_logs %></strong>
+  </article>
+  <article class="card">
+    <span>Allowed</span>
+    <strong><%= summary.overview.allow_logs %></strong>
+  </article>
+  <article class="card">
+    <span>Avg Latency</span>
+    <strong><%= summary.overview.avg_latency_ms %> ms</strong>
+  </article>
+</section>
+
 <section class="card table-card">
   <table>
     <thead>
       <tr>
         <th>Time</th>
         <th>Method</th>
+        <th>Stage</th>
         <th>Domain</th>
         <th>Decision</th>
+        <th>Rule</th>
         <th>Status</th>
+        <th>Upstream</th>
+        <th>Extension</th>
+        <th>Latency</th>
       </tr>
     </thead>
     <tbody>
@@ -18,11 +77,21 @@
         <tr>
           <td><%= item.created_at %></td>
           <td><%= item.request_method %></td>
+          <td><%= item.rule_stage || '-' %></td>
           <td><%= item.domain %></td>
           <td><%= item.decision %></td>
+          <td><%= item.matched_rule || '-' %></td>
           <td><%= item.status_code %></td>
+          <td><%= item.upstream_status || '-' %></td>
+          <td><%= item.detected_extension || '-' %></td>
+          <td><%= item.latency_ms || 0 %> ms</td>
         </tr>
       <% }) %>
+      <% if (logs.length === 0) { %>
+        <tr>
+          <td colspan="10">No logs match the current filters.</td>
+        </tr>
+      <% } %>
     </tbody>
   </table>
 </section>

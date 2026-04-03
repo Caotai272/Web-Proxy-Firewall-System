@@ -6,6 +6,7 @@
 - `GET /dashboard`: render dashboard page
 - `GET /filter-lab`: manual browser test page for the filtering pipeline
 - `GET /api/dashboard/stats`: summary metrics
+- `GET /api/logs/summary`: aggregated logging metrics from PostgreSQL
 - `GET /api/rules`: list rules
 - `GET /api/logs`: list access logs
 

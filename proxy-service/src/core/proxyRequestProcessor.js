@@ -84,6 +84,7 @@ function buildErrorResult(error) {
 
 async function processHttpProxyRequest({ method, targetUrl, headers, body, clientIp }) {
   let parsedRequest = null;
+  const startedAt = Date.now();
 
   try {
     parsedRequest = parseRequestUrl(targetUrl);
@@ -97,9 +98,16 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
         domain: parsedRequest.domain,
         clientIp,
         decision: 'block',
+        ruleStage: ruleDecision.stage,
         matchedRule: ruleDecision.matchedRule,
         statusCode: 403,
-        blockedReason: ruleDecision.matchedRule
+        upstreamStatus: null,
+        blockedReason: ruleDecision.matchedRule,
+        finalUrl: null,
+        contentType: null,
+        detectedExtension: ruleDecision.detectedExtension || null,
+        responseSizeBytes: null,
+        latencyMs: Date.now() - startedAt
       });
 
       return buildBlockResult(
@@ -124,9 +132,16 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
         domain: parsedRequest.domain,
         clientIp,
         decision: 'block',
+        ruleStage: responseDecision.stage,
         matchedRule: responseDecision.matchedRule,
         statusCode: 403,
-        blockedReason: responseDecision.matchedRule
+        upstreamStatus: forwardedResponse.status,
+        blockedReason: responseDecision.matchedRule,
+        finalUrl: forwardedResponse.finalUrl,
+        contentType: forwardedResponse.headers['content-type'] || null,
+        detectedExtension: responseDecision.detectedExtension || null,
+        responseSizeBytes: forwardedResponse.body.length,
+        latencyMs: Date.now() - startedAt
       });
 
       return buildBlockResult(
@@ -142,9 +157,16 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
       domain: parsedRequest.domain,
       clientIp,
       decision: 'allow',
+      ruleStage: responseDecision.stage,
       matchedRule: ruleDecision.matchedRule,
       statusCode: forwardedResponse.status,
-      blockedReason: null
+      upstreamStatus: forwardedResponse.status,
+      blockedReason: null,
+      finalUrl: forwardedResponse.finalUrl,
+      contentType: forwardedResponse.headers['content-type'] || null,
+      detectedExtension: responseDecision.detectedExtension || null,
+      responseSizeBytes: forwardedResponse.body.length,
+      latencyMs: Date.now() - startedAt
     });
 
     return {
@@ -160,9 +182,16 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
       domain: parsedRequest ? parsedRequest.domain : null,
       clientIp,
       decision: 'block',
+      ruleStage: 'proxy:error',
       matchedRule: 'proxy:error',
       statusCode: errorResult.statusCode,
-      blockedReason: error.message
+      upstreamStatus: null,
+      blockedReason: error.message,
+      finalUrl: parsedRequest ? parsedRequest.url : null,
+      contentType: null,
+      detectedExtension: null,
+      responseSizeBytes: null,
+      latencyMs: Date.now() - startedAt
     });
 
     return errorResult;

@@ -108,6 +108,7 @@ function startProxyServer({ app, port }) {
 
   server.on('connect', async (req, clientSocket, head) => {
     const clientIp = req.socket.remoteAddress || null;
+    const startedAt = Date.now();
     let connectDecision = null;
 
     try {
@@ -120,9 +121,16 @@ function startProxyServer({ app, port }) {
           domain: connectDecision.parsedRequest.domain,
           clientIp,
           decision: 'block',
+          ruleStage: connectDecision.ruleDecision.stage,
           matchedRule: connectDecision.ruleDecision.matchedRule,
           statusCode: 403,
-          blockedReason: connectDecision.ruleDecision.matchedRule
+          upstreamStatus: null,
+          blockedReason: connectDecision.ruleDecision.matchedRule,
+          finalUrl: null,
+          contentType: null,
+          detectedExtension: connectDecision.parsedRequest.extension,
+          responseSizeBytes: null,
+          latencyMs: Date.now() - startedAt
         });
 
         clientSocket.end(createConnectErrorResponse(403, 'Forbidden'));
@@ -148,9 +156,16 @@ function startProxyServer({ app, port }) {
             domain: connectDecision.parsedRequest.domain,
             clientIp,
             decision: 'allow',
+            ruleStage: connectDecision.ruleDecision.stage,
             matchedRule: connectDecision.ruleDecision.matchedRule,
             statusCode: 200,
-            blockedReason: null
+            upstreamStatus: 200,
+            blockedReason: null,
+            finalUrl: connectDecision.parsedRequest.url,
+            contentType: null,
+            detectedExtension: connectDecision.parsedRequest.extension,
+            responseSizeBytes: null,
+            latencyMs: Date.now() - startedAt
           });
         }
       );
@@ -162,9 +177,16 @@ function startProxyServer({ app, port }) {
           domain: connectDecision ? connectDecision.parsedRequest.domain : null,
           clientIp,
           decision: 'block',
+          ruleStage: 'proxy:error',
           matchedRule: 'proxy:error',
           statusCode: 502,
-          blockedReason: error.message
+          upstreamStatus: null,
+          blockedReason: error.message,
+          finalUrl: connectDecision ? connectDecision.parsedRequest.url : null,
+          contentType: null,
+          detectedExtension: null,
+          responseSizeBytes: null,
+          latencyMs: Date.now() - startedAt
         });
 
         clientSocket.end(createConnectErrorResponse(502, 'Bad Gateway'));
@@ -180,9 +202,16 @@ function startProxyServer({ app, port }) {
         domain: connectDecision ? connectDecision.parsedRequest.domain : null,
         clientIp,
         decision: 'block',
+        ruleStage: 'proxy:error',
         matchedRule: 'proxy:error',
         statusCode: 400,
-        blockedReason: error.message
+        upstreamStatus: null,
+        blockedReason: error.message,
+        finalUrl: connectDecision ? connectDecision.parsedRequest.url : null,
+        contentType: null,
+        detectedExtension: null,
+        responseSizeBytes: null,
+        latencyMs: Date.now() - startedAt
       });
 
       clientSocket.end(createConnectErrorResponse(400, 'Bad Request'));
