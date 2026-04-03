@@ -57,6 +57,28 @@ async function submitForm(url, formData, cookie) {
   });
 }
 
+async function requestJson(url, { method = 'GET', cookie, body } = {}) {
+  const headers = {
+    ...headersWithCookie(cookie)
+  };
+
+  if (body !== undefined) {
+    headers['content-type'] = 'application/json';
+  }
+
+  const response = await httpRequest(url, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+
+  const text = await response.text();
+  return {
+    response,
+    body: text ? JSON.parse(text) : null
+  };
+}
+
 function headersWithCookie(cookie) {
   return cookie ? { cookie } : {};
 }
@@ -120,7 +142,13 @@ async function getRuleHitCount(target) {
 async function run() {
   const createdTestValues = {
     domainTarget: `manual-block-${Date.now()}.local`,
-    keyword: `manualblocked${Date.now()}`
+    keyword: `manualblocked${Date.now()}`,
+    apiRuleTarget: `api-block-${Date.now()}.local`,
+    apiRuleTargetUpdated: `api-block-updated-${Date.now()}.local`,
+    apiKeyword: `apiblocked${Date.now()}`,
+    apiKeywordUpdated: `apiblockedupdated${Date.now()}`,
+    apiExtension: '.api01',
+    apiExtensionUpdated: '.api02'
   };
 
   try {
@@ -192,6 +220,155 @@ async function run() {
       headers: headersWithCookie(adminCookie)
     });
     assert.strictEqual(rulesApi.status, 200, 'admin should access rules API');
+
+    const createdRuleApi = await requestJson(buildUrl(adminBaseUrl, '/api/rules'), {
+      method: 'POST',
+      cookie: adminCookie,
+      body: {
+        type: 'domain',
+        action: 'block',
+        target: createdTestValues.apiRuleTarget,
+        description: 'API CRUD rule',
+        priority: 130,
+        scope_type: 'global',
+        scope_value: ''
+      }
+    });
+    assert.strictEqual(createdRuleApi.response.status, 201, 'rule API should create a rule');
+
+    const ruleId = createdRuleApi.body.id;
+    const fetchedRuleApi = await requestJson(buildUrl(adminBaseUrl, `/api/rules/${ruleId}`), {
+      cookie: adminCookie
+    });
+    assert.strictEqual(fetchedRuleApi.response.status, 200, 'rule API should fetch one rule');
+    assert.strictEqual(fetchedRuleApi.body.target, createdTestValues.apiRuleTarget, 'fetched rule should match created target');
+
+    const updatedRuleApi = await requestJson(buildUrl(adminBaseUrl, `/api/rules/${ruleId}`), {
+      method: 'PATCH',
+      cookie: adminCookie,
+      body: {
+        target: createdTestValues.apiRuleTargetUpdated,
+        priority: 140,
+        description: 'API CRUD rule updated'
+      }
+    });
+    assert.strictEqual(updatedRuleApi.response.status, 200, 'rule API should update a rule');
+    assert.strictEqual(updatedRuleApi.body.target, createdTestValues.apiRuleTargetUpdated, 'rule target should update');
+
+    const toggledRuleApi = await requestJson(buildUrl(adminBaseUrl, `/api/rules/${ruleId}/toggle`), {
+      method: 'PATCH',
+      cookie: adminCookie
+    });
+    assert.strictEqual(toggledRuleApi.response.status, 200, 'rule API should toggle a rule');
+    assert.strictEqual(toggledRuleApi.body.is_active, false, 'rule toggle should deactivate rule');
+
+    const ruleAfterDisable = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
+      url: `http://${createdTestValues.apiRuleTargetUpdated}/`
+    }));
+    assert.notStrictEqual(ruleAfterDisable.response.status, 403, 'disabled API rule should no longer block');
+
+    const toggledRuleBackApi = await requestJson(buildUrl(adminBaseUrl, `/api/rules/${ruleId}/toggle`), {
+      method: 'PATCH',
+      cookie: adminCookie
+    });
+    assert.strictEqual(toggledRuleBackApi.body.is_active, true, 'rule toggle should reactivate rule');
+
+    const ruleAfterEnable = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
+      url: `http://${createdTestValues.apiRuleTargetUpdated}/`
+    }));
+    assert.strictEqual(ruleAfterEnable.response.status, 403, 'reactivated API rule should block');
+
+    const createdKeywordApi = await requestJson(buildUrl(adminBaseUrl, '/api/keywords'), {
+      method: 'POST',
+      cookie: adminCookie,
+      body: {
+        keyword: createdTestValues.apiKeyword,
+        description: 'API CRUD keyword'
+      }
+    });
+    assert.strictEqual(createdKeywordApi.response.status, 201, 'keyword API should create a keyword');
+
+    const keywordId = createdKeywordApi.body.id;
+    const updatedKeywordApi = await requestJson(buildUrl(adminBaseUrl, `/api/keywords/${keywordId}`), {
+      method: 'PATCH',
+      cookie: adminCookie,
+      body: {
+        keyword: createdTestValues.apiKeywordUpdated,
+        description: 'API CRUD keyword updated'
+      }
+    });
+    assert.strictEqual(updatedKeywordApi.response.status, 200, 'keyword API should update a keyword');
+
+    const keywordBlock = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
+      url: `http://admin-service:4000/health?probe=${createdTestValues.apiKeywordUpdated}`
+    }));
+    assert.strictEqual(keywordBlock.response.status, 403, 'updated API keyword should block immediately');
+
+    const toggledKeywordApi = await requestJson(buildUrl(adminBaseUrl, `/api/keywords/${keywordId}/toggle`), {
+      method: 'PATCH',
+      cookie: adminCookie
+    });
+    assert.strictEqual(toggledKeywordApi.body.is_active, false, 'keyword toggle should deactivate keyword');
+
+    const keywordAfterDisable = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
+      url: `http://admin-service:4000/health?probe=${createdTestValues.apiKeywordUpdated}`
+    }));
+    assert.notStrictEqual(keywordAfterDisable.response.status, 403, 'disabled keyword should no longer block');
+
+    const createdExtensionApi = await requestJson(buildUrl(adminBaseUrl, '/api/extensions'), {
+      method: 'POST',
+      cookie: adminCookie,
+      body: {
+        extension: createdTestValues.apiExtension,
+        description: 'API CRUD extension'
+      }
+    });
+    assert.strictEqual(createdExtensionApi.response.status, 201, 'extension API should create an extension');
+
+    const extensionId = createdExtensionApi.body.id;
+    const fetchedExtensionApi = await requestJson(buildUrl(adminBaseUrl, `/api/extensions/${extensionId}`), {
+      cookie: adminCookie
+    });
+    assert.strictEqual(fetchedExtensionApi.response.status, 200, 'extension API should fetch one extension');
+
+    const updatedExtensionApi = await requestJson(buildUrl(adminBaseUrl, `/api/extensions/${extensionId}`), {
+      method: 'PATCH',
+      cookie: adminCookie,
+      body: {
+        extension: createdTestValues.apiExtensionUpdated,
+        description: 'API CRUD extension updated'
+      }
+    });
+    assert.strictEqual(updatedExtensionApi.response.status, 200, 'extension API should update an extension');
+    assert.strictEqual(updatedExtensionApi.body.extension, createdTestValues.apiExtensionUpdated, 'extension should update');
+
+    const deletedExtensionApi = await requestJson(buildUrl(adminBaseUrl, `/api/extensions/${extensionId}`), {
+      method: 'DELETE',
+      cookie: adminCookie
+    });
+    assert.strictEqual(deletedExtensionApi.response.status, 200, 'extension API should delete an extension');
+
+    const missingExtensionApi = await requestJson(buildUrl(adminBaseUrl, `/api/extensions/${extensionId}`), {
+      cookie: adminCookie
+    });
+    assert.strictEqual(missingExtensionApi.response.status, 404, 'deleted extension should return 404');
+
+    const deletedKeywordApi = await requestJson(buildUrl(adminBaseUrl, `/api/keywords/${keywordId}`), {
+      method: 'DELETE',
+      cookie: adminCookie
+    });
+    assert.strictEqual(deletedKeywordApi.response.status, 200, 'keyword API should delete a keyword');
+
+    const deletedRuleApi = await requestJson(buildUrl(adminBaseUrl, `/api/rules/${ruleId}`), {
+      method: 'DELETE',
+      cookie: adminCookie
+    });
+    assert.strictEqual(deletedRuleApi.response.status, 200, 'rule API should delete a rule');
+
+    const missingRuleApi = await requestJson(buildUrl(adminBaseUrl, `/api/rules/${ruleId}`), {
+      cookie: adminCookie
+    });
+    assert.strictEqual(missingRuleApi.response.status, 404, 'deleted rule should return 404');
 
     const proxyHealth = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
       url: 'http://admin-service:4000/health'
@@ -269,7 +446,19 @@ async function run() {
     console.log('Integration test suite passed.');
   } finally {
     await pool.query('DELETE FROM keywords WHERE keyword = $1', [createdTestValues.keyword]);
+    await pool.query(
+      'DELETE FROM keywords WHERE keyword = ANY($1::text[])',
+      [[createdTestValues.apiKeyword, createdTestValues.apiKeywordUpdated]]
+    );
     await pool.query('DELETE FROM rules WHERE target = $1', [createdTestValues.domainTarget]);
+    await pool.query(
+      'DELETE FROM rules WHERE target = ANY($1::text[])',
+      [[createdTestValues.apiRuleTarget, createdTestValues.apiRuleTargetUpdated]]
+    );
+    await pool.query(
+      'DELETE FROM blocked_extensions WHERE extension = ANY($1::text[])',
+      [[createdTestValues.apiExtension, createdTestValues.apiExtensionUpdated]]
+    );
     await pool.end();
     await servicePool.end();
   }

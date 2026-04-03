@@ -62,6 +62,29 @@ Update the root `.env` values if you want different default credentials or sessi
 - `viewer` can access dashboard, logs, and filter lab
 - `admin` can also inspect rule, keyword, and extension pages
 
+## Admin CRUD API
+
+Authenticated `admin` sessions can use JSON CRUD endpoints:
+
+- `GET /api/rules`
+- `GET /api/rules/:id`
+- `POST /api/rules`
+- `PATCH /api/rules/:id`
+- `PATCH /api/rules/:id/toggle`
+- `DELETE /api/rules/:id`
+- `GET /api/keywords`
+- `GET /api/keywords/:id`
+- `POST /api/keywords`
+- `PATCH /api/keywords/:id`
+- `PATCH /api/keywords/:id/toggle`
+- `DELETE /api/keywords/:id`
+- `GET /api/extensions`
+- `GET /api/extensions/:id`
+- `POST /api/extensions`
+- `PATCH /api/extensions/:id`
+- `PATCH /api/extensions/:id/toggle`
+- `DELETE /api/extensions/:id`
+
 ## Integration Test
 
 Run the end-to-end integration suite after the stack is up:

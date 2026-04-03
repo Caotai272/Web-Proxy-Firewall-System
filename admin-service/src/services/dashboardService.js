@@ -49,65 +49,143 @@ function buildDuplicateError(message) {
   return error;
 }
 
-async function createRule(input) {
-  try {
-    return await ruleRepository.createRule(input);
-  } catch (error) {
+function withDuplicateHandling(handler, message) {
+  return handler().catch((error) => {
     if (error.code === '23505') {
-      throw buildDuplicateError('Rule already exists.');
+      throw buildDuplicateError(message);
     }
 
     throw error;
+  });
+}
+
+async function createRule(input) {
+  return withDuplicateHandling(() => ruleRepository.createRule(input), 'Rule already exists.');
+}
+
+async function getRule(id) {
+  return ruleRepository.getRuleById(id);
+}
+
+async function updateRule(id, input) {
+  const existing = await ruleRepository.getRuleById(id);
+  if (!existing) {
+    return null;
   }
+
+  await withDuplicateHandling(
+    () => ruleRepository.updateRule(id, {
+      type: input.type ?? existing.type,
+      target: input.target ?? existing.target,
+      action: input.action ?? existing.action,
+      description: input.description ?? existing.description,
+      priority: input.priority ?? existing.priority,
+      scopeType: input.scopeType ?? existing.scope_type,
+      scopeValue: input.scopeValue ?? existing.scope_value,
+      isActive: input.isActive ?? existing.is_active
+    }),
+    'Rule already exists.'
+  );
+
+  return ruleRepository.getRuleById(id);
 }
 
 async function toggleRule(id) {
   return ruleRepository.toggleRule(id);
 }
 
-async function createKeyword(input) {
-  try {
-    return await keywordRepository.createKeyword(input);
-  } catch (error) {
-    if (error.code === '23505') {
-      throw buildDuplicateError('Keyword already exists.');
-    }
+async function deleteRule(id) {
+  return ruleRepository.deleteRule(id);
+}
 
-    throw error;
+async function createKeyword(input) {
+  return withDuplicateHandling(() => keywordRepository.createKeyword(input), 'Keyword already exists.');
+}
+
+async function getKeyword(id) {
+  return keywordRepository.getKeywordById(id);
+}
+
+async function updateKeyword(id, input) {
+  const existing = await keywordRepository.getKeywordById(id);
+  if (!existing) {
+    return null;
   }
+
+  await withDuplicateHandling(
+    () => keywordRepository.updateKeyword(id, {
+      keyword: input.keyword ?? existing.keyword,
+      description: input.description ?? existing.description,
+      isActive: input.isActive ?? existing.is_active
+    }),
+    'Keyword already exists.'
+  );
+
+  return keywordRepository.getKeywordById(id);
 }
 
 async function toggleKeyword(id) {
   return keywordRepository.toggleKeyword(id);
 }
 
-async function createExtension(input) {
-  try {
-    return await extensionRepository.createExtension(input);
-  } catch (error) {
-    if (error.code === '23505') {
-      throw buildDuplicateError('Extension already exists.');
-    }
+async function deleteKeyword(id) {
+  return keywordRepository.deleteKeyword(id);
+}
 
-    throw error;
+async function createExtension(input) {
+  return withDuplicateHandling(() => extensionRepository.createExtension(input), 'Extension already exists.');
+}
+
+async function getExtension(id) {
+  return extensionRepository.getExtensionById(id);
+}
+
+async function updateExtension(id, input) {
+  const existing = await extensionRepository.getExtensionById(id);
+  if (!existing) {
+    return null;
   }
+
+  await withDuplicateHandling(
+    () => extensionRepository.updateExtension(id, {
+      extension: input.extension ?? existing.extension,
+      description: input.description ?? existing.description,
+      isActive: input.isActive ?? existing.is_active
+    }),
+    'Extension already exists.'
+  );
+
+  return extensionRepository.getExtensionById(id);
 }
 
 async function toggleExtension(id) {
   return extensionRepository.toggleExtension(id);
 }
 
+async function deleteExtension(id) {
+  return extensionRepository.deleteExtension(id);
+}
+
 module.exports = {
   getStats,
   getRules,
+  getRule,
   getKeywords,
+  getKeyword,
   getExtensions,
+  getExtension,
   getLogs,
   getLogSummary,
   createRule,
+  updateRule,
   toggleRule,
+  deleteRule,
   createKeyword,
+  updateKeyword,
   toggleKeyword,
+  deleteKeyword,
   createExtension,
-  toggleExtension
+  updateExtension,
+  toggleExtension,
+  deleteExtension
 };

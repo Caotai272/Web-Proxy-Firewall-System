@@ -1,11 +1,15 @@
 function errorHandler(err, req, res, next) {
-  console.error(err);
+  const statusCode = Number(err.statusCode) || 500;
 
-  if (req.path.startsWith('/api/')) {
-    return res.status(500).json({ message: err.message });
+  if (statusCode >= 500) {
+    console.error(err);
   }
 
-  return res.status(500).render('error', { error: err });
+  if (req.path.startsWith('/api/')) {
+    return res.status(statusCode).json({ message: err.message });
+  }
+
+  return res.status(statusCode).render('error', { error: err });
 }
 
 module.exports = errorHandler;

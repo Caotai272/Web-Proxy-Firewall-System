@@ -29,6 +29,143 @@ function redirectWithSession(req, res, location, next) {
   });
 }
 
+function buildHttpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+function parseEntityId(value) {
+  const id = Number(value);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw buildHttpError(400, 'Invalid id.');
+  }
+
+  return id;
+}
+
+function normalizeRulePayload(body = {}, { partial = false } = {}) {
+  const payload = {};
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'type')) {
+    const type = String(body.type || '').trim();
+    if (!['domain', 'url_pattern'].includes(type)) {
+      throw buildHttpError(400, 'Rule type is invalid.');
+    }
+    payload.type = type;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'target')) {
+    const target = String(body.target || '').trim().toLowerCase();
+    if (!target) {
+      throw buildHttpError(400, 'Rule target is required.');
+    }
+    payload.target = target;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'action')) {
+    const action = String(body.action || '').trim();
+    if (!['allow', 'block'].includes(action)) {
+      throw buildHttpError(400, 'Rule action is invalid.');
+    }
+    payload.action = action;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'description')) {
+    payload.description = String(body.description || '').trim();
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'priority')) {
+    const priority = Number(body.priority);
+    if (!Number.isFinite(priority) || priority < 1) {
+      throw buildHttpError(400, 'Priority must be a positive number.');
+    }
+    payload.priority = priority;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'scope_type')) {
+    const scopeType = String(body.scope_type || 'global').trim();
+    if (!['global', 'request_domain', 'client_ip'].includes(scopeType)) {
+      throw buildHttpError(400, 'Scope type is invalid.');
+    }
+    payload.scopeType = scopeType;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'scope_value')) {
+    payload.scopeValue = String(body.scope_value || '').trim().toLowerCase();
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'is_active')) {
+    if (typeof body.is_active === 'boolean') {
+      payload.isActive = body.is_active;
+    } else if (body.is_active === 'true' || body.is_active === 'false') {
+      payload.isActive = body.is_active === 'true';
+    } else {
+      throw buildHttpError(400, 'is_active must be a boolean.');
+    }
+  }
+
+  return payload;
+}
+
+function normalizeKeywordPayload(body = {}, { partial = false } = {}) {
+  const payload = {};
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'keyword')) {
+    const keyword = String(body.keyword || '').trim().toLowerCase();
+    if (!keyword) {
+      throw buildHttpError(400, 'Keyword is required.');
+    }
+    payload.keyword = keyword;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'description')) {
+    payload.description = String(body.description || '').trim();
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'is_active')) {
+    if (typeof body.is_active === 'boolean') {
+      payload.isActive = body.is_active;
+    } else if (body.is_active === 'true' || body.is_active === 'false') {
+      payload.isActive = body.is_active === 'true';
+    } else {
+      throw buildHttpError(400, 'is_active must be a boolean.');
+    }
+  }
+
+  return payload;
+}
+
+function normalizeExtensionPayload(body = {}, { partial = false } = {}) {
+  const payload = {};
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'extension')) {
+    const rawExtension = String(body.extension || '').trim().toLowerCase();
+    const extension = rawExtension.startsWith('.') ? rawExtension : `.${rawExtension}`;
+    if (!rawExtension || extension === '.') {
+      throw buildHttpError(400, 'Extension is required.');
+    }
+    payload.extension = extension;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(body, 'description')) {
+    payload.description = String(body.description || '').trim();
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'is_active')) {
+    if (typeof body.is_active === 'boolean') {
+      payload.isActive = body.is_active;
+    } else if (body.is_active === 'true' || body.is_active === 'false') {
+      payload.isActive = body.is_active === 'true';
+    } else {
+      throw buildHttpError(400, 'is_active must be a boolean.');
+    }
+  }
+
+  return payload;
+}
+
 async function health(req, res) {
   try {
     const stats = await dashboardService.getStats();
@@ -148,6 +285,20 @@ async function getRules(req, res, next) {
   }
 }
 
+async function getRule(req, res, next) {
+  try {
+    const item = await dashboardService.getRule(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Rule not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getKeywords(req, res, next) {
   try {
     res.json(await dashboardService.getKeywords());
@@ -156,9 +307,37 @@ async function getKeywords(req, res, next) {
   }
 }
 
+async function getKeyword(req, res, next) {
+  try {
+    const item = await dashboardService.getKeyword(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Keyword not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getExtensions(req, res, next) {
   try {
     res.json(await dashboardService.getExtensions());
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getExtension(req, res, next) {
+  try {
+    const item = await dashboardService.getExtension(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Extension not found.');
+    }
+
+    res.json(item);
   } catch (error) {
     next(error);
   }
@@ -193,49 +372,19 @@ async function getLogSummary(req, res, next) {
 
 async function createRule(req, res, next) {
   try {
-    const type = String(req.body.type || '').trim();
-    const target = String(req.body.target || '').trim().toLowerCase();
-    const action = String(req.body.action || '').trim();
-    const description = String(req.body.description || '').trim();
-    const priority = Number(req.body.priority);
-    const scopeType = String(req.body.scope_type || 'global').trim();
-    const scopeValue = String(req.body.scope_value || '').trim().toLowerCase();
-
-    if (!['domain', 'url_pattern'].includes(type)) {
-      setFlash(req, 'error', 'Rule type is invalid.');
-      redirectWithSession(req, res, '/rules', next);
-      return;
-    }
-
-    if (!['allow', 'block'].includes(action)) {
-      setFlash(req, 'error', 'Rule action is invalid.');
-      redirectWithSession(req, res, '/rules', next);
-      return;
-    }
-
-    if (!target) {
-      setFlash(req, 'error', 'Rule target is required.');
-      redirectWithSession(req, res, '/rules', next);
-      return;
-    }
-
-    if (!['global', 'request_domain', 'client_ip'].includes(scopeType)) {
-      setFlash(req, 'error', 'Scope type is invalid.');
-      redirectWithSession(req, res, '/rules', next);
-      return;
-    }
+    const payload = normalizeRulePayload(req.body);
 
     await dashboardService.createRule({
-      type,
-      target,
-      action,
-      description,
-      priority: Number.isFinite(priority) ? priority : 100,
-      scopeType,
-      scopeValue
+      type: payload.type,
+      target: payload.target,
+      action: payload.action,
+      description: payload.description,
+      priority: payload.priority,
+      scopeType: payload.scopeType,
+      scopeValue: payload.scopeValue
     });
 
-    setFlash(req, 'success', `Rule created for ${target}.`);
+    setFlash(req, 'success', `Rule created for ${payload.target}.`);
   } catch (error) {
     setFlash(req, 'error', error.message);
   }
@@ -261,17 +410,10 @@ async function toggleRule(req, res, next) {
 
 async function createKeyword(req, res, next) {
   try {
-    const keyword = String(req.body.keyword || '').trim().toLowerCase();
-    const description = String(req.body.description || '').trim();
+    const payload = normalizeKeywordPayload(req.body);
 
-    if (!keyword) {
-      setFlash(req, 'error', 'Keyword is required.');
-      redirectWithSession(req, res, '/keywords', next);
-      return;
-    }
-
-    await dashboardService.createKeyword({ keyword, description });
-    setFlash(req, 'success', `Keyword ${keyword} added.`);
+    await dashboardService.createKeyword(payload);
+    setFlash(req, 'success', `Keyword ${payload.keyword} added.`);
   } catch (error) {
     setFlash(req, 'error', error.message);
   }
@@ -297,18 +439,10 @@ async function toggleKeyword(req, res, next) {
 
 async function createExtension(req, res, next) {
   try {
-    const rawExtension = String(req.body.extension || '').trim().toLowerCase();
-    const extension = rawExtension.startsWith('.') ? rawExtension : `.${rawExtension}`;
-    const description = String(req.body.description || '').trim();
+    const payload = normalizeExtensionPayload(req.body);
 
-    if (!rawExtension || extension === '.') {
-      setFlash(req, 'error', 'Extension is required.');
-      redirectWithSession(req, res, '/extensions', next);
-      return;
-    }
-
-    await dashboardService.createExtension({ extension, description });
-    setFlash(req, 'success', `Extension ${extension} added.`);
+    await dashboardService.createExtension(payload);
+    setFlash(req, 'success', `Extension ${payload.extension} added.`);
   } catch (error) {
     setFlash(req, 'error', error.message);
   }
@@ -332,6 +466,171 @@ async function toggleExtension(req, res, next) {
   }
 }
 
+async function createRuleApi(req, res, next) {
+  try {
+    const payload = normalizeRulePayload(req.body);
+    const created = await dashboardService.createRule(payload);
+    res.status(201).json(await dashboardService.getRule(created.id));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateRuleApi(req, res, next) {
+  try {
+    const item = await dashboardService.updateRule(
+      parseEntityId(req.params.id),
+      normalizeRulePayload(req.body, { partial: true })
+    );
+
+    if (!item) {
+      throw buildHttpError(404, 'Rule not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function toggleRuleApi(req, res, next) {
+  try {
+    const item = await dashboardService.toggleRule(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Rule not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteRuleApi(req, res, next) {
+  try {
+    const item = await dashboardService.deleteRule(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Rule not found.');
+    }
+
+    res.json({ deleted: true, id: item.id });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createKeywordApi(req, res, next) {
+  try {
+    const payload = normalizeKeywordPayload(req.body);
+    const created = await dashboardService.createKeyword(payload);
+    res.status(201).json(await dashboardService.getKeyword(created.id));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateKeywordApi(req, res, next) {
+  try {
+    const item = await dashboardService.updateKeyword(
+      parseEntityId(req.params.id),
+      normalizeKeywordPayload(req.body, { partial: true })
+    );
+
+    if (!item) {
+      throw buildHttpError(404, 'Keyword not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function toggleKeywordApi(req, res, next) {
+  try {
+    const item = await dashboardService.toggleKeyword(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Keyword not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteKeywordApi(req, res, next) {
+  try {
+    const item = await dashboardService.deleteKeyword(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Keyword not found.');
+    }
+
+    res.json({ deleted: true, id: item.id });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createExtensionApi(req, res, next) {
+  try {
+    const payload = normalizeExtensionPayload(req.body);
+    const created = await dashboardService.createExtension(payload);
+    res.status(201).json(await dashboardService.getExtension(created.id));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateExtensionApi(req, res, next) {
+  try {
+    const item = await dashboardService.updateExtension(
+      parseEntityId(req.params.id),
+      normalizeExtensionPayload(req.body, { partial: true })
+    );
+
+    if (!item) {
+      throw buildHttpError(404, 'Extension not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function toggleExtensionApi(req, res, next) {
+  try {
+    const item = await dashboardService.toggleExtension(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Extension not found.');
+    }
+
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteExtensionApi(req, res, next) {
+  try {
+    const item = await dashboardService.deleteExtension(parseEntityId(req.params.id));
+
+    if (!item) {
+      throw buildHttpError(404, 'Extension not found.');
+    }
+
+    res.json({ deleted: true, id: item.id });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   health,
   renderDashboard,
@@ -344,14 +643,29 @@ module.exports = {
   renderDownloadInstallerDemo,
   getDashboardStats,
   getRules,
+  getRule,
   getKeywords,
+  getKeyword,
   getExtensions,
+  getExtension,
   getLogs,
   getLogSummary,
   createRule,
+  createRuleApi,
+  updateRuleApi,
   toggleRule,
+  toggleRuleApi,
+  deleteRuleApi,
   createKeyword,
+  createKeywordApi,
+  updateKeywordApi,
   toggleKeyword,
+  toggleKeywordApi,
+  deleteKeywordApi,
   createExtension,
-  toggleExtension
+  createExtensionApi,
+  updateExtensionApi,
+  toggleExtension,
+  toggleExtensionApi,
+  deleteExtensionApi
 };
