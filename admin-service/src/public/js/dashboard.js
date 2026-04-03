@@ -20,6 +20,7 @@ function applyTheme(theme) {
 
   const nextLabel = theme === 'dark' ? 'Light' : 'Dark';
   themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+
   const labelNode = themeToggle.querySelector('.theme-toggle-label');
   const iconNode = themeToggle.querySelector('.theme-toggle-icon');
 
@@ -28,7 +29,7 @@ function applyTheme(theme) {
   }
 
   if (iconNode) {
-    iconNode.textContent = theme === 'dark' ? '☀' : '◐';
+    iconNode.textContent = theme === 'dark' ? 'LM' : 'DM';
   }
 }
 
