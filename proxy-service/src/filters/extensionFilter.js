@@ -1,6 +1,10 @@
-function extensionFilter(parsedRequest, extensions) {
+function extensionFilter(target, extensions) {
+  const extension = typeof target === 'string'
+    ? target
+    : String(target && target.extension ? target.extension : '');
+
   const matchedExtension = extensions.find(
-    (item) => item.extension.toLowerCase() === String(parsedRequest.extension || '').toLowerCase()
+    (item) => item.extension.toLowerCase() === extension.toLowerCase()
   );
 
   if (!matchedExtension) {

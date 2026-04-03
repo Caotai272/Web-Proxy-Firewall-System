@@ -62,6 +62,13 @@ async function renderLogs(req, res, next) {
   }
 }
 
+function renderFilterLab(req, res) {
+  res.render('filter-lab', {
+    proxyBaseUrl: 'http://localhost:3000',
+    adminBaseUrl: 'http://admin-service:4000'
+  });
+}
+
 function renderBlockedContentDemo(req, res) {
   res.type('html').send(`
     <!DOCTYPE html>
@@ -77,6 +84,12 @@ function renderBlockedContentDemo(req, res) {
       </body>
     </html>
   `);
+}
+
+function renderDownloadInstallerDemo(req, res) {
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', 'attachment; filename="installer.exe"');
+  res.send(Buffer.from('MZ demo executable payload', 'utf8'));
 }
 
 async function getDashboardStats(req, res, next) {
@@ -127,7 +140,9 @@ module.exports = {
   renderKeywords,
   renderExtensions,
   renderLogs,
+  renderFilterLab,
   renderBlockedContentDemo,
+  renderDownloadInstallerDemo,
   getDashboardStats,
   getRules,
   getKeywords,

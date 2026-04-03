@@ -81,6 +81,11 @@ a {
   margin-bottom: 24px;
 }
 
+.lead {
+  max-width: 72ch;
+  color: var(--muted);
+}
+
 .hero h2,
 .page-head h2 {
   margin: 8px 0 0;
@@ -110,6 +115,33 @@ a {
 
 .table-card {
   overflow-x: auto;
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.lab-item {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.lab-item h3,
+.card h3 {
+  margin-top: 0;
+}
+
+code {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(38, 28, 21, 0.08);
 }
 
 table {
@@ -142,6 +174,10 @@ th {
 
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lab-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,0 +1,43 @@
+<%- include('partials-header', { title: 'Filter Lab' }) %>
+<section class="page-head">
+  <h2>Filter Lab</h2>
+  <p class="lead">Open these links directly in your browser to verify request-stage and response-stage filtering.</p>
+</section>
+
+<section class="card lab-grid">
+  <article class="lab-item">
+    <h3>Allowed request</h3>
+    <p>Forwards normally through the proxy.</p>
+    <code><%= proxyBaseUrl %>/proxy?url=http://example.com</code>
+    <p><a href="<%= proxyBaseUrl %>/proxy?url=http://example.com" target="_blank" rel="noreferrer">Open allowed example</a></p>
+  </article>
+
+  <article class="lab-item">
+    <h3>Blocked domain</h3>
+    <p>Request is denied before contacting upstream.</p>
+    <code><%= proxyBaseUrl %>/proxy?url=http://facebook.com</code>
+    <p><a href="<%= proxyBaseUrl %>/proxy?url=http://facebook.com" target="_blank" rel="noreferrer">Open blocked domain</a></p>
+  </article>
+
+  <article class="lab-item">
+    <h3>Blocked HTML keyword</h3>
+    <p>Upstream page is fetched, then blocked after keyword scan on HTML.</p>
+    <code><%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/blocked-content</code>
+    <p><a href="<%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/blocked-content" target="_blank" rel="noreferrer">Open keyword-block demo</a></p>
+  </article>
+
+  <article class="lab-item">
+    <h3>Blocked download extension</h3>
+    <p>Request URL looks harmless, but response headers announce an <code>.exe</code> file and the proxy blocks it.</p>
+    <code><%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/download-installer</code>
+    <p><a href="<%= proxyBaseUrl %>/proxy?url=<%= adminBaseUrl %>/demo/download-installer" target="_blank" rel="noreferrer">Open extension-block demo</a></p>
+  </article>
+</section>
+
+<section class="card">
+  <h3>Preview API</h3>
+  <p>Use the preview endpoint to inspect which rule matched without streaming the full response to the browser.</p>
+  <code><%= proxyBaseUrl %>/filter/preview?url=<%= adminBaseUrl %>/demo/download-installer</code>
+  <p><a href="<%= proxyBaseUrl %>/filter/preview?url=<%= adminBaseUrl %>/demo/download-installer" target="_blank" rel="noreferrer">Open preview JSON</a></p>
+</section>
+<%- include('partials-footer') %>

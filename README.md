@@ -36,6 +36,8 @@ docker compose up --build
 - Forward HTTP requests in proxy mode
 - Support HTTPS `CONNECT` tunneling
 - Enforce whitelist, blacklist, URL pattern, extension, and keyword rules
+- Block downloads by extension from both request URLs and upstream response headers
+- Preview filter decisions with `GET /filter/preview?url=<target>`
 - Persist access logs to PostgreSQL
 
 ## Next Phases

@@ -1,6 +1,6 @@
 const { forwardRequest } = require('./forwarder');
 const { parseRequestUrl, parseConnectTarget } = require('./requestParser');
-const { evaluateRules, inspectResponseContent } = require('../services/ruleService');
+const { loadActiveFilterData, evaluateRequestRules, evaluateRules, inspectResponseContent } = require('../services/ruleService');
 const { renderBlockPage } = require('../services/blockPageService');
 const { logAccess } = require('../services/logService');
 
@@ -43,7 +43,8 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
 
   try {
     parsedRequest = parseRequestUrl(targetUrl);
-    const ruleDecision = await evaluateRules(parsedRequest);
+    const filterData = await loadActiveFilterData();
+    const ruleDecision = evaluateRequestRules(parsedRequest, filterData);
 
     if (ruleDecision.decision === 'block') {
       await safeLog({
@@ -71,7 +72,7 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
       body: method === 'GET' || method === 'HEAD' ? undefined : body
     });
 
-    const responseDecision = inspectResponseContent(forwardedResponse, ruleDecision.keywords);
+    const responseDecision = inspectResponseContent(forwardedResponse, filterData);
     if (responseDecision.decision === 'block') {
       await safeLog({
         requestMethod: method,
@@ -134,8 +135,52 @@ async function evaluateConnectRequest({ authority }) {
   };
 }
 
+async function previewProxyRequest({ targetUrl, method = 'GET', headers = {} }) {
+  const parsedRequest = parseRequestUrl(targetUrl);
+  const filterData = await loadActiveFilterData();
+  const requestDecision = evaluateRequestRules(parsedRequest, filterData);
+
+  if (requestDecision.decision === 'block') {
+    return {
+      target: parsedRequest,
+      requestDecision,
+      responseDecision: null,
+      finalDecision: 'block',
+      blockedAt: 'request',
+      upstreamStatus: null
+    };
+  }
+
+  const forwardedResponse = await forwardRequest({
+    method,
+    targetUrl: parsedRequest.url,
+    headers,
+    body: undefined
+  });
+
+  const responseDecision = inspectResponseContent(forwardedResponse, filterData);
+
+  return {
+    target: parsedRequest,
+    requestDecision,
+    responseDecision,
+    finalDecision: responseDecision.decision === 'block' ? 'block' : 'allow',
+    blockedAt: responseDecision.decision === 'block' ? 'response' : null,
+    upstreamStatus: forwardedResponse.status,
+    upstreamStatusText: forwardedResponse.statusText,
+    responseMeta: {
+      contentType: forwardedResponse.headers['content-type'] || null,
+      finalUrl: forwardedResponse.finalUrl,
+      detectedExtension: responseDecision.detectedExtension || null,
+      detectedExtensionSource: responseDecision.detectedExtensionSource || null,
+      detectedFilename: responseDecision.detectedFilename || null
+    }
+  };
+}
+
 module.exports = {
   processHttpProxyRequest,
   evaluateConnectRequest,
+  previewProxyRequest,
   safeLog
 };

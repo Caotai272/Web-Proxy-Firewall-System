@@ -9,6 +9,8 @@ router.get('/rules', dashboardController.renderRules);
 router.get('/keywords', dashboardController.renderKeywords);
 router.get('/extensions', dashboardController.renderExtensions);
 router.get('/logs', dashboardController.renderLogs);
+router.get('/filter-lab', dashboardController.renderFilterLab);
 router.get('/demo/blocked-content', dashboardController.renderBlockedContentDemo);
+router.get('/demo/download-installer', dashboardController.renderDownloadInstallerDemo);
 
 module.exports = router;

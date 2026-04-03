@@ -7,91 +7,199 @@ const { listActiveRules } = require('../repositories/ruleRepository');
 const { listActiveKeywords } = require('../repositories/keywordRepository');
 const { listActiveExtensions } = require('../repositories/extensionRepository');
 
-async function evaluateRules(parsedRequest) {
+async function loadActiveFilterData() {
   const [rules, keywords, extensions] = await Promise.all([
     listActiveRules(),
     listActiveKeywords(),
     listActiveExtensions()
   ]);
 
+  return {
+    rules,
+    keywords,
+    extensions
+  };
+}
+
+function buildDecision(decision, matchedRule, stage, extra = {}) {
+  return {
+    decision,
+    matchedRule,
+    stage,
+    ...extra
+  };
+}
+
+function extractPathExtension(pathname) {
+  const lastSegment = String(pathname || '')
+    .split('/')
+    .filter(Boolean)
+    .pop() || '';
+
+  if (!lastSegment.includes('.')) {
+    return null;
+  }
+
+  return `.${lastSegment.split('.').pop().toLowerCase()}`;
+}
+
+function extractFilenameFromContentDisposition(contentDisposition) {
+  const headerValue = String(contentDisposition || '').trim();
+
+  if (!headerValue) {
+    return null;
+  }
+
+  const utf8Match = headerValue.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+  if (utf8Match) {
+    try {
+      return decodeURIComponent(utf8Match[1].replace(/^"|"$/g, ''));
+    } catch (error) {
+      return utf8Match[1].replace(/^"|"$/g, '');
+    }
+  }
+
+  const plainMatch = headerValue.match(/filename\s*=\s*"([^"]+)"|filename\s*=\s*([^;]+)/i);
+  if (!plainMatch) {
+    return null;
+  }
+
+  return (plainMatch[1] || plainMatch[2] || '').trim().replace(/^"|"$/g, '');
+}
+
+function detectResponseExtension(response) {
+  const dispositionFilename = extractFilenameFromContentDisposition(
+    response.headers['content-disposition']
+  );
+  const dispositionExtension = dispositionFilename ? extractPathExtension(dispositionFilename) : null;
+
+  if (dispositionExtension) {
+    return {
+      extension: dispositionExtension,
+      source: 'content-disposition',
+      filename: dispositionFilename
+    };
+  }
+
+  const finalUrlExtension = extractPathExtension(new URL(response.finalUrl).pathname);
+  if (finalUrlExtension) {
+    return {
+      extension: finalUrlExtension,
+      source: 'final-url',
+      filename: null
+    };
+  }
+
+  return {
+    extension: null,
+    source: null,
+    filename: dispositionFilename
+  };
+}
+
+function evaluateRequestRules(parsedRequest, filterData) {
+  const { rules, keywords, extensions } = filterData;
+
   const whitelistResult = whitelistFilter(parsedRequest, rules);
   if (whitelistResult.matched) {
-    return {
-      decision: 'allow',
-      matchedRule: whitelistResult.matchedRule,
-      keywords
-    };
+    return buildDecision('allow', whitelistResult.matchedRule, 'request:whitelist', {
+      keywords,
+      extensions
+    });
   }
 
   const domainResult = domainFilter(parsedRequest, rules);
   if (domainResult.matched) {
-    return {
-      decision: 'block',
-      matchedRule: domainResult.matchedRule,
-      keywords
-    };
+    return buildDecision('block', domainResult.matchedRule, 'request:domain', {
+      keywords,
+      extensions
+    });
   }
 
   const urlResult = urlFilter(parsedRequest, rules);
   if (urlResult.matched) {
-    return {
-      decision: 'block',
-      matchedRule: urlResult.matchedRule,
-      keywords
-    };
+    return buildDecision('block', urlResult.matchedRule, 'request:url_pattern', {
+      keywords,
+      extensions
+    });
   }
 
   const extensionResult = extensionFilter(parsedRequest, extensions);
   if (extensionResult.matched) {
-    return {
-      decision: 'block',
-      matchedRule: extensionResult.matchedRule,
-      keywords
-    };
+    return buildDecision('block', extensionResult.matchedRule, 'request:extension', {
+      keywords,
+      extensions,
+      detectedExtension: parsedRequest.extension,
+      detectedExtensionSource: 'request-path'
+    });
   }
 
   const keywordResult = keywordFilter(parsedRequest.url, keywords);
   if (keywordResult.matched) {
-    return {
-      decision: 'block',
-      matchedRule: keywordResult.matchedRule,
-      keywords
-    };
+    return buildDecision('block', keywordResult.matchedRule, 'request:keyword', {
+      keywords,
+      extensions
+    });
   }
 
-  return {
-    decision: 'allow',
-    matchedRule: null,
-    keywords
-  };
+  return buildDecision('allow', null, 'request:pass', {
+    keywords,
+    extensions
+  });
 }
 
-function inspectResponseContent(response, keywords) {
+async function evaluateRules(parsedRequest) {
+  const filterData = await loadActiveFilterData();
+  return evaluateRequestRules(parsedRequest, filterData);
+}
+
+function inspectResponseContent(response, filterData) {
+  const responseExtension = detectResponseExtension(response);
+  const extensionResult = responseExtension.extension
+    ? extensionFilter(responseExtension.extension, filterData.extensions)
+    : { matched: false };
+
+  if (extensionResult.matched) {
+    return buildDecision('block', extensionResult.matchedRule, 'response:extension', {
+      detectedExtension: responseExtension.extension,
+      detectedExtensionSource: responseExtension.source,
+      detectedFilename: responseExtension.filename
+    });
+  }
+
   const contentType = String(response.headers['content-type'] || '').toLowerCase();
 
   if (!contentType.includes('text/html')) {
-    return {
-      decision: 'allow',
-      matchedRule: null
-    };
+    return buildDecision('allow', null, 'response:pass', {
+      contentType,
+      detectedExtension: responseExtension.extension,
+      detectedExtensionSource: responseExtension.source,
+      detectedFilename: responseExtension.filename
+    });
   }
 
-  const keywordResult = keywordFilter(response.body.toString('utf8'), keywords);
+  const keywordResult = keywordFilter(response.body.toString('utf8'), filterData.keywords);
 
   if (!keywordResult.matched) {
-    return {
-      decision: 'allow',
-      matchedRule: null
-    };
+    return buildDecision('allow', null, 'response:pass', {
+      contentType,
+      detectedExtension: responseExtension.extension,
+      detectedExtensionSource: responseExtension.source,
+      detectedFilename: responseExtension.filename
+    });
   }
 
-  return {
-    decision: 'block',
-    matchedRule: keywordResult.matchedRule
-  };
+  return buildDecision('block', keywordResult.matchedRule, 'response:keyword', {
+    contentType,
+    detectedExtension: responseExtension.extension,
+    detectedExtensionSource: responseExtension.source,
+    detectedFilename: responseExtension.filename
+  });
 }
 
 module.exports = {
+  loadActiveFilterData,
+  evaluateRequestRules,
   evaluateRules,
   inspectResponseContent
 };

@@ -4,7 +4,7 @@ const express = require('express');
 const { startProxyServer } = require('./core/proxyServer');
 const { getDbTime } = require('./db/client');
 const { getClientIp } = require('./utils/http');
-const { processHttpProxyRequest } = require('./core/proxyRequestProcessor');
+const { processHttpProxyRequest, previewProxyRequest } = require('./core/proxyRequestProcessor');
 const { renderBlockPage } = require('./services/blockPageService');
 
 const app = express();
@@ -36,6 +36,23 @@ app.get('/block-preview', (req, res) => {
     title: 'Access Blocked',
     message: 'This request matches an active filtering rule.'
   }));
+});
+
+app.get('/filter/preview', async (req, res) => {
+  try {
+    const preview = await previewProxyRequest({
+      targetUrl: req.query.url,
+      method: String(req.query.method || 'GET').toUpperCase(),
+      headers: req.headers
+    });
+
+    res.json(preview);
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
 });
 
 app.all('/proxy', async (req, res) => {
@@ -113,6 +130,7 @@ app.get('/', (req, res) => {
           <h1>HTTP proxy and CONNECT tunnel are ready</h1>
           <p>Use this service as an HTTP proxy at <code>http://localhost:${port}</code> or call the query helper below for direct testing.</p>
           <p>Query helper: <code>/proxy?url=http://admin-service:4000/health</code></p>
+          <p>Preview helper: <code>/filter/preview?url=http://admin-service:4000/demo/download-installer</code></p>
           <p>Local example: <a href="/proxy?url=http://admin-service:4000/health">forward to admin-service health</a></p>
           <p>Blocked example: <a href="/proxy?url=http://facebook.com">facebook.com</a></p>
         </section>
