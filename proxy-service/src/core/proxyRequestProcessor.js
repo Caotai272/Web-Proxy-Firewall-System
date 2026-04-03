@@ -4,6 +4,23 @@ const { loadActiveFilterData, evaluateRequestRules, evaluateRules, inspectRespon
 const { renderBlockPage } = require('../services/blockPageService');
 const { logAccess } = require('../services/logService');
 
+const BAD_GATEWAY_ERROR_CODES = new Set([
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'EAI_AGAIN',
+  'ENETUNREACH',
+  'ENOTFOUND',
+  'EHOSTUNREACH',
+  'UND_ERR_SOCKET'
+]);
+
+const GATEWAY_TIMEOUT_ERROR_CODES = new Set([
+  'ETIMEDOUT',
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_HEADERS_TIMEOUT',
+  'UND_ERR_BODY_TIMEOUT'
+]);
+
 async function safeLog(entry) {
   try {
     await logAccess(entry);
@@ -21,8 +38,35 @@ function buildBlockResult(matchedRule, title, message) {
   };
 }
 
+function classifyProxyError(error) {
+  if (typeof error.statusCode === 'number') {
+    return error.statusCode;
+  }
+
+  if (error.name === 'TimeoutError') {
+    return 504;
+  }
+
+  const causeCode = error.cause && typeof error.cause.code === 'string'
+    ? error.cause.code
+    : null;
+
+  if (causeCode && GATEWAY_TIMEOUT_ERROR_CODES.has(causeCode)) {
+    return 504;
+  }
+
+  if (
+    error.message === 'fetch failed' ||
+    (causeCode && BAD_GATEWAY_ERROR_CODES.has(causeCode))
+  ) {
+    return 502;
+  }
+
+  return 400;
+}
+
 function buildErrorResult(error) {
-  const statusCode = error.name === 'TimeoutError' ? 504 : 400;
+  const statusCode = classifyProxyError(error);
 
   return {
     kind: 'error',
@@ -182,5 +226,6 @@ module.exports = {
   processHttpProxyRequest,
   evaluateConnectRequest,
   previewProxyRequest,
+  classifyProxyError,
   safeLog
 };

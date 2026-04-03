@@ -14,13 +14,29 @@ function collectRequestBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let totalBytes = 0;
+    let settled = false;
+
+    function rejectOnce(error) {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      reject(error);
+    }
 
     req.on('data', (chunk) => {
+      if (settled) {
+        return;
+      }
+
       totalBytes += chunk.length;
 
       if (totalBytes > MAX_BODY_SIZE) {
-        reject(new Error('Request body exceeds proxy limit'));
-        req.destroy();
+        req.resume();
+        rejectOnce(Object.assign(new Error('Request body exceeds proxy limit'), {
+          statusCode: 413
+        }));
         return;
       }
 
@@ -28,10 +44,15 @@ function collectRequestBody(req) {
     });
 
     req.on('end', () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
       resolve(chunks.length > 0 ? Buffer.concat(chunks) : undefined);
     });
 
-    req.on('error', reject);
+    req.on('error', rejectOnce);
   });
 }
 
@@ -76,7 +97,7 @@ function startProxyServer({ app, port }) {
 
       writeProxyResult(res, result);
     } catch (error) {
-      res.statusCode = 400;
+      res.statusCode = typeof error.statusCode === 'number' ? error.statusCode : 400;
       res.setHeader('content-type', 'application/json; charset=utf-8');
       res.end(JSON.stringify({
         status: 'error',

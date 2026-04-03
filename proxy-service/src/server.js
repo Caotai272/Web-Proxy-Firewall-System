@@ -4,7 +4,7 @@ const express = require('express');
 const { startProxyServer } = require('./core/proxyServer');
 const { getDbTime } = require('./db/client');
 const { getClientIp } = require('./utils/http');
-const { processHttpProxyRequest, previewProxyRequest } = require('./core/proxyRequestProcessor');
+const { classifyProxyError, processHttpProxyRequest, previewProxyRequest } = require('./core/proxyRequestProcessor');
 const { renderBlockPage } = require('./services/blockPageService');
 
 const app = express();
@@ -48,7 +48,7 @@ app.get('/filter/preview', async (req, res) => {
 
     res.json(preview);
   } catch (error) {
-    res.status(400).json({
+    res.status(classifyProxyError(error)).json({
       status: 'error',
       message: error.message
     });

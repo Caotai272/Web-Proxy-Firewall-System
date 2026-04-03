@@ -1,11 +1,23 @@
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function renderBlockPage({ title, message }) {
+  const safeTitle = escapeHtml(title);
+  const safeMessage = escapeHtml(message);
+
   return `
     <!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>${title}</title>
+        <title>${safeTitle}</title>
         <style>
           body {
             margin: 0;
@@ -31,8 +43,8 @@ function renderBlockPage({ title, message }) {
       </head>
       <body>
         <section class="card">
-          <h1>${title}</h1>
-          <p>${message}</p>
+          <h1>${safeTitle}</h1>
+          <p>${safeMessage}</p>
         </section>
       </body>
     </html>
