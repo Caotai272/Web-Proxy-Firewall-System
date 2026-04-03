@@ -13,6 +13,7 @@ router.get('/dashboard', requireViewer, dashboardController.renderDashboard);
 router.get('/rules', requireAdmin, dashboardController.renderRules);
 router.post('/rules', requireAdmin, dashboardController.createRule);
 router.post('/rules/:id/toggle', requireAdmin, dashboardController.toggleRule);
+router.post('/rules/:id/delete', requireAdmin, dashboardController.deleteRule);
 router.get('/keywords', requireAdmin, dashboardController.renderKeywords);
 router.post('/keywords', requireAdmin, dashboardController.createKeyword);
 router.post('/keywords/:id/toggle', requireAdmin, dashboardController.toggleKeyword);

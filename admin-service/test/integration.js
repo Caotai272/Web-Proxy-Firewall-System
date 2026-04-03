@@ -187,7 +187,7 @@ async function run() {
         type: 'domain',
         action: 'block',
         priority: '120',
-        target: createdTestValues.domainTarget,
+        target: `https://www.${createdTestValues.domainTarget}/`,
         scope_type: 'global',
         scope_value: '',
         description: 'Integration test managed rule'
@@ -197,9 +197,27 @@ async function run() {
     assert.strictEqual(createRuleResponse.status, 302, 'admin should be able to create a rule');
 
     const createdRuleBlock = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
-      url: `http://${createdTestValues.domainTarget}/`
+      url: `http://www.${createdTestValues.domainTarget}/`
     }));
     assert.strictEqual(createdRuleBlock.response.status, 403, 'new admin-created domain rule should block immediately');
+
+    const normalizedRuleRow = await pool.query(
+      'SELECT id, target FROM rules WHERE target = $1 LIMIT 1',
+      [createdTestValues.domainTarget]
+    );
+    assert.strictEqual(normalizedRuleRow.rows.length, 1, 'form-created domain rule should be normalized before save');
+
+    const deletedFormRuleResponse = await submitForm(
+      buildUrl(adminBaseUrl, `/rules/${normalizedRuleRow.rows[0].id}/delete`),
+      {},
+      adminCookie
+    );
+    assert.strictEqual(deletedFormRuleResponse.status, 302, 'admin should be able to delete a rule from the UI');
+
+    const deletedFormRuleCheck = await fetchText(buildUrl(proxyBaseUrl, '/proxy', {
+      url: `http://www.${createdTestValues.domainTarget}/`
+    }));
+    assert.notStrictEqual(deletedFormRuleCheck.response.status, 403, 'deleted UI rule should no longer block');
 
     const createKeywordResponse = await submitForm(
       buildUrl(adminBaseUrl, '/keywords'),

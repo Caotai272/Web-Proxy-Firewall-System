@@ -92,7 +92,7 @@
               <div class="cell-title">
                 <strong><%= item.domain || 'unknown-domain' %></strong>
                 <span class="cell-meta mono"><%= item.request_method %> <%= item.url %></span>
-                <span class="cell-meta">Logged at <%= item.created_at %></span>
+                <span class="cell-meta">Logged at <%= formatVietnamDateTime(item.created_at) %></span>
               </div>
             </td>
             <td>

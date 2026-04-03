@@ -752,6 +752,12 @@ code {
   margin: 0;
 }
 
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .filter-form input::placeholder {
   color: var(--text-soft);
 }
@@ -794,6 +800,18 @@ code {
 .button-link.secondary:hover {
   background: var(--surface-strong);
   border-color: var(--line-strong);
+}
+
+.button-link.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+
+.button-link.danger:hover {
+  background: #991b1b;
+  border-color: #991b1b;
+  color: #ffffff;
 }
 
 .lab-item {

@@ -45,7 +45,40 @@ function parseEntityId(value) {
   return id;
 }
 
-function normalizeRulePayload(body = {}, { partial = false } = {}) {
+function normalizeDomainTarget(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) {
+    return '';
+  }
+
+  const candidate = raw.includes('://') ? raw : `https://${raw}`;
+
+  try {
+    const parsed = new URL(candidate);
+    let hostname = parsed.hostname.toLowerCase();
+
+    if (hostname.startsWith('www.')) {
+      hostname = hostname.slice(4);
+    }
+
+    return hostname;
+  } catch (error) {
+    let normalized = raw
+      .replace(/^[a-z]+:\/\//i, '')
+      .replace(/[/?#].*$/, '')
+      .replace(/:\d+$/, '')
+      .replace(/\.+$/, '')
+      .trim();
+
+    if (normalized.startsWith('www.')) {
+      normalized = normalized.slice(4);
+    }
+
+    return normalized;
+  }
+}
+
+function normalizeRulePayload(body = {}, { partial = false, currentType = null } = {}) {
   const payload = {};
 
   if (!partial || Object.prototype.hasOwnProperty.call(body, 'type')) {
@@ -57,7 +90,11 @@ function normalizeRulePayload(body = {}, { partial = false } = {}) {
   }
 
   if (!partial || Object.prototype.hasOwnProperty.call(body, 'target')) {
-    const target = String(body.target || '').trim().toLowerCase();
+    const rawTarget = String(body.target || '').trim();
+    const targetType = payload.type || body.type || currentType;
+    const target = targetType === 'domain'
+      ? normalizeDomainTarget(rawTarget)
+      : rawTarget.toLowerCase();
     if (!target) {
       throw buildHttpError(400, 'Rule target is required.');
     }
@@ -408,6 +445,22 @@ async function toggleRule(req, res, next) {
   }
 }
 
+async function deleteRule(req, res, next) {
+  try {
+    const deleted = await dashboardService.deleteRule(parseEntityId(req.params.id));
+
+    if (!deleted) {
+      setFlash(req, 'error', 'Rule not found.');
+    } else {
+      setFlash(req, 'success', 'Rule deleted.');
+    }
+
+    redirectWithSession(req, res, '/rules', next);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function createKeyword(req, res, next) {
   try {
     const payload = normalizeKeywordPayload(req.body);
@@ -478,9 +531,16 @@ async function createRuleApi(req, res, next) {
 
 async function updateRuleApi(req, res, next) {
   try {
+    const ruleId = parseEntityId(req.params.id);
+    const current = await dashboardService.getRule(ruleId);
+
+    if (!current) {
+      throw buildHttpError(404, 'Rule not found.');
+    }
+
     const item = await dashboardService.updateRule(
-      parseEntityId(req.params.id),
-      normalizeRulePayload(req.body, { partial: true })
+      ruleId,
+      normalizeRulePayload(req.body, { partial: true, currentType: current.type })
     );
 
     if (!item) {
@@ -654,6 +714,7 @@ module.exports = {
   createRuleApi,
   updateRuleApi,
   toggleRule,
+  deleteRule,
   toggleRuleApi,
   deleteRuleApi,
   createKeyword,

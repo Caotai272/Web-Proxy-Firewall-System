@@ -16,9 +16,31 @@ const errorHandler = require('./middlewares/errorHandler');
 const app = express();
 const port = Number(process.env.PORT || 4000);
 const PgSession = createPgSession(session);
+const vietnamDateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
+  timeZone: 'Asia/Ho_Chi_Minh',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.locals.formatVietnamDateTime = (value) => {
+  if (!value) {
+    return '-';
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+
+  return `${vietnamDateTimeFormatter.format(date)} GMT+7`;
+};
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -92,12 +92,17 @@
             <td><span class="mono"><%= rule.priority %></span></td>
             <td><%= rule.scope_type %><%= rule.scope_value ? `:${rule.scope_value}` : '' %></td>
             <td><%= rule.hit_count %></td>
-            <td><%= rule.last_matched_at || '-' %></td>
+            <td><%= formatVietnamDateTime(rule.last_matched_at) %></td>
             <td><span class="status-badge <%= rule.is_active ? 'active' : 'inactive' %>"><%= rule.is_active ? 'active' : 'inactive' %></span></td>
             <td>
-              <form method="post" action="/rules/<%= rule.id %>/toggle" class="inline-form">
-                <button type="submit" class="button-link secondary"><%= rule.is_active ? 'Disable' : 'Enable' %></button>
-              </form>
+              <div class="inline-actions">
+                <form method="post" action="/rules/<%= rule.id %>/toggle" class="inline-form">
+                  <button type="submit" class="button-link secondary"><%= rule.is_active ? 'Disable' : 'Enable' %></button>
+                </form>
+                <form method="post" action="/rules/<%= rule.id %>/delete" class="inline-form" onsubmit="return confirm('Delete this rule?');">
+                  <button type="submit" class="button-link danger">Delete</button>
+                </form>
+              </div>
             </td>
           </tr>
         <% }) %>
