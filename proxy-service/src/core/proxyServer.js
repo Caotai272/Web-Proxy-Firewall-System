@@ -112,7 +112,10 @@ function startProxyServer({ app, port }) {
     let connectDecision = null;
 
     try {
-      connectDecision = await evaluateConnectRequest({ authority: req.url });
+      connectDecision = await evaluateConnectRequest({
+        authority: req.url,
+        clientIp
+      });
 
       if (connectDecision.ruleDecision.decision === 'block') {
         await safeLog({
@@ -123,6 +126,7 @@ function startProxyServer({ app, port }) {
           decision: 'block',
           ruleStage: connectDecision.ruleDecision.stage,
           matchedRule: connectDecision.ruleDecision.matchedRule,
+          matchedRuleId: connectDecision.ruleDecision.matchedRuleId || null,
           statusCode: 403,
           upstreamStatus: null,
           blockedReason: connectDecision.ruleDecision.matchedRule,
@@ -158,6 +162,7 @@ function startProxyServer({ app, port }) {
             decision: 'allow',
             ruleStage: connectDecision.ruleDecision.stage,
             matchedRule: connectDecision.ruleDecision.matchedRule,
+            matchedRuleId: connectDecision.ruleDecision.matchedRuleId || null,
             statusCode: 200,
             upstreamStatus: 200,
             blockedReason: null,

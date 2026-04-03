@@ -217,6 +217,37 @@ code {
   color: var(--text);
 }
 
+.topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.session-meta {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  min-width: 220px;
+}
+
+.session-meta strong {
+  font-size: 0.9rem;
+}
+
+.session-meta span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.logout-form {
+  margin: 0;
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -471,6 +502,132 @@ code {
   text-transform: uppercase;
 }
 
+.muted-inline {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.flash {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+
+.flash-stack {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.flash-error {
+  border-color: #fecaca;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.flash-success {
+  border-color: #bbf7d0;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+}
+
+.login-card {
+  width: min(560px, calc(100vw - 24px));
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.login-form {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.login-form label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.login-form span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-form input,
+.login-form button {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.login-form input:focus,
+.login-form button:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.login-form button {
+  cursor: pointer;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.login-form button:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.login-meta {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.login-meta div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+}
+
+.login-meta span {
+  color: var(--text-soft);
+}
+
 .filter-card {
   margin-bottom: var(--space-5);
 }
@@ -508,6 +665,91 @@ code {
   color: var(--text);
   font: inherit;
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.form-card {
+  margin-bottom: var(--space-5);
+}
+
+.admin-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-form.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-form.grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-form label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.admin-form span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form button {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form button:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.admin-form button {
+  cursor: pointer;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.admin-form button:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.field-span-2 {
+  grid-column: span 2;
+}
+
+.field-span-3 {
+  grid-column: span 3;
+}
+
+.action-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-row button {
+  width: auto;
+}
+
+.inline-form {
+  margin: 0;
 }
 
 .filter-form input::placeholder {
@@ -708,6 +950,14 @@ tbody tr:hover {
   .catalog-grid {
     grid-template-columns: 1fr;
   }
+
+  .admin-form.grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-span-3 {
+    grid-column: span 2;
+  }
 }
 
 @media (max-width: 860px) {
@@ -724,6 +974,11 @@ tbody tr:hover {
 
   .theme-toggle {
     align-self: flex-start;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .insight-grid,
@@ -745,12 +1000,24 @@ tbody tr:hover {
 
   .metrics,
   .filter-form,
-  .stat-list {
+  .stat-list,
+  .admin-form.grid-2,
+  .admin-form.grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .field-span-2,
+  .field-span-3 {
+    grid-column: span 1;
   }
 
   .footer-inner {
     flex-direction: column;
+  }
+
+  .login-meta div {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   tbody td,

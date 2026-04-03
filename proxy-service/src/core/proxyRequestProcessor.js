@@ -87,7 +87,7 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
   const startedAt = Date.now();
 
   try {
-    parsedRequest = parseRequestUrl(targetUrl);
+    parsedRequest = parseRequestUrl(targetUrl, { clientIp });
     const filterData = await loadActiveFilterData();
     const ruleDecision = evaluateRequestRules(parsedRequest, filterData);
 
@@ -100,6 +100,7 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
         decision: 'block',
         ruleStage: ruleDecision.stage,
         matchedRule: ruleDecision.matchedRule,
+        matchedRuleId: ruleDecision.matchedRuleId || null,
         statusCode: 403,
         upstreamStatus: null,
         blockedReason: ruleDecision.matchedRule,
@@ -159,6 +160,7 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
       decision: 'allow',
       ruleStage: responseDecision.stage,
       matchedRule: ruleDecision.matchedRule,
+      matchedRuleId: ruleDecision.matchedRuleId || null,
       statusCode: forwardedResponse.status,
       upstreamStatus: forwardedResponse.status,
       blockedReason: null,
@@ -198,8 +200,8 @@ async function processHttpProxyRequest({ method, targetUrl, headers, body, clien
   }
 }
 
-async function evaluateConnectRequest({ authority }) {
-  const parsedRequest = parseConnectTarget(authority);
+async function evaluateConnectRequest({ authority, clientIp = null }) {
+  const parsedRequest = parseConnectTarget(authority, { clientIp });
   const ruleDecision = await evaluateRules(parsedRequest);
 
   return {

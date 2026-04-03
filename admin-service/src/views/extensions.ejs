@@ -3,6 +3,28 @@
   <h2>Blocked Extensions</h2>
   <p class="lead">Download extensions that the proxy should deny when they appear in request paths or response metadata.</p>
 </section>
+<section class="card form-card">
+  <div class="panel-head">
+    <div>
+      <p class="kicker">Admin Control</p>
+      <h3>Add Blocked Extension</h3>
+      <p class="table-note">Use this to deny executables, archives, or any other risky file type immediately at the proxy.</p>
+    </div>
+  </div>
+  <form method="post" action="/extensions" class="admin-form grid-2">
+    <label>
+      <span>Extension</span>
+      <input type="text" name="extension" placeholder=".exe" required />
+    </label>
+    <label>
+      <span>Description</span>
+      <input type="text" name="description" placeholder="Why this extension is blocked" />
+    </label>
+    <div class="field-span-2 action-row">
+      <button type="submit">Add extension</button>
+    </div>
+  </form>
+</section>
 <section class="card table-card">
   <div class="panel-head">
     <div>
@@ -17,6 +39,8 @@
         <tr>
           <th>Extension</th>
           <th>Description</th>
+          <th>Status</th>
+          <th>Control</th>
         </tr>
       </thead>
       <tbody>
@@ -29,6 +53,12 @@
               </div>
             </td>
             <td><%= item.description %></td>
+            <td><span class="status-badge <%= item.is_active ? 'active' : 'inactive' %>"><%= item.is_active ? 'active' : 'inactive' %></span></td>
+            <td>
+              <form method="post" action="/extensions/<%= item.id %>/toggle" class="inline-form">
+                <button type="submit" class="button-link secondary"><%= item.is_active ? 'Disable' : 'Enable' %></button>
+              </form>
+            </td>
           </tr>
         <% }) %>
       </tbody>

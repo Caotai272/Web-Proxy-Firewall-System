@@ -1,4 +1,4 @@
-function buildParsedRequest(targetUrl) {
+function buildParsedRequest(targetUrl, extra = {}) {
   const pathname = targetUrl.pathname || '/';
   const lastSegment = pathname.split('/').filter(Boolean).pop() || '';
   const extension = lastSegment.includes('.') ? `.${lastSegment.split('.').pop()}` : null;
@@ -10,11 +10,12 @@ function buildParsedRequest(targetUrl) {
     pathname,
     extension,
     search: targetUrl.search,
-    port: targetUrl.port || null
+    port: targetUrl.port || null,
+    clientIp: extra.clientIp || null
   };
 }
 
-function parseRequestUrl(inputUrl) {
+function parseRequestUrl(inputUrl, extra = {}) {
   if (!inputUrl) {
     throw new Error('Missing required query parameter: url');
   }
@@ -31,10 +32,10 @@ function parseRequestUrl(inputUrl) {
     throw new Error('Only http and https protocols are supported');
   }
 
-  return buildParsedRequest(targetUrl);
+  return buildParsedRequest(targetUrl, extra);
 }
 
-function parseConnectTarget(authority) {
+function parseConnectTarget(authority, extra = {}) {
   if (!authority) {
     throw new Error('Missing CONNECT authority');
   }
@@ -53,7 +54,7 @@ function parseConnectTarget(authority) {
   }
 
   return {
-    ...buildParsedRequest(connectUrl),
+    ...buildParsedRequest(connectUrl, extra),
     url: `https://${connectUrl.host}/`,
     protocol: 'https:',
     pathname: '/',

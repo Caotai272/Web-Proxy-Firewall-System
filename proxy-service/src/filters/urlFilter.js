@@ -1,8 +1,11 @@
+const { appliesToScope } = require('./ruleScope');
+
 function urlFilter(parsedRequest, rules) {
   const matchedRule = rules.find(
     (rule) =>
       rule.type === 'url_pattern' &&
       rule.action === 'block' &&
+      appliesToScope(rule, parsedRequest) &&
       parsedRequest.url.includes(rule.target)
   );
 
@@ -12,7 +15,8 @@ function urlFilter(parsedRequest, rules) {
 
   return {
     matched: true,
-    matchedRule: `${matchedRule.type}:block:${matchedRule.target}`
+    matchedRule: `${matchedRule.type}:block:${matchedRule.target}`,
+    matchedRuleId: matchedRule.id
   };
 }
 

@@ -1,0 +1,6 @@
+.git
+.gitignore
+.agents
+artifacts
+**/node_modules
+**/npm-debug.log

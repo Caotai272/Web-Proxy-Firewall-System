@@ -1,12 +1,11 @@
-function matchesDomain(target, domain) {
-  return domain === target || domain.endsWith(`.${target}`);
-}
+const { appliesToScope, matchesDomain } = require('./ruleScope');
 
 function domainFilter(parsedRequest, rules) {
   const matchedRule = rules.find(
     (rule) =>
       rule.type === 'domain' &&
       rule.action === 'block' &&
+      appliesToScope(rule, parsedRequest) &&
       matchesDomain(rule.target, parsedRequest.domain)
   );
 
@@ -16,7 +15,8 @@ function domainFilter(parsedRequest, rules) {
 
   return {
     matched: true,
-    matchedRule: `${matchedRule.type}:block:${matchedRule.target}`
+    matchedRule: `${matchedRule.type}:block:${matchedRule.target}`,
+    matchedRuleId: matchedRule.id
   };
 }
 

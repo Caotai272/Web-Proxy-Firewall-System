@@ -107,4 +107,47 @@
     </ul>
   </article>
 </section>
+
+<section class="insight-grid">
+  <article class="card">
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Rule Engine</p>
+        <h3>Most Matched Rules</h3>
+        <p>Priority-sorted rules with live hit counters from proxy evaluations.</p>
+      </div>
+    </div>
+    <ul class="rank-list">
+      <% stats.topRules.forEach((item) => { %>
+        <li>
+          <span><%= item.action %> :: <%= item.target %> <small class="muted-inline">(p<%= item.priority %>)</small></span>
+          <strong><%= item.hit_count %></strong>
+        </li>
+      <% }) %>
+      <% if (stats.topRules.length === 0) { %>
+        <li><span>No rule hits yet</span><strong>0</strong></li>
+      <% } %>
+    </ul>
+  </article>
+
+  <article class="card">
+    <div class="panel-head">
+      <div>
+        <p class="kicker">Access Control</p>
+        <h3>Session Model</h3>
+        <p>Dashboard access now requires login with role-based page and API authorization.</p>
+      </div>
+    </div>
+    <ul class="stack-list">
+      <li>
+        <strong>Viewer</strong>
+        <span>Can access dashboard, logs, and filter lab.</span>
+      </li>
+      <li>
+        <strong>Admin</strong>
+        <span>Can also inspect rule, keyword, and extension configuration pages.</span>
+      </li>
+    </ul>
+  </article>
+</section>
 <%- include('partials-footer') %>

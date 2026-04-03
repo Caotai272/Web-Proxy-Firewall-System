@@ -12,7 +12,32 @@ async function listKeywords() {
   return result.rows;
 }
 
+async function createKeyword({ keyword, description }) {
+  const result = await query(
+    `INSERT INTO keywords (keyword, description)
+     VALUES ($1, $2)
+     RETURNING id`,
+    [keyword, description || null]
+  );
+
+  return result.rows[0];
+}
+
+async function toggleKeyword(id) {
+  const result = await query(
+    `UPDATE keywords
+     SET is_active = NOT is_active
+     WHERE id = $1
+     RETURNING id, is_active`,
+    [id]
+  );
+
+  return result.rows[0] || null;
+}
+
 module.exports = {
   countKeywords,
-  listKeywords
+  listKeywords,
+  createKeyword,
+  toggleKeyword
 };

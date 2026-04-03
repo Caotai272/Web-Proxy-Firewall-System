@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-card">
+        <p class="eyebrow">Admin Access</p>
+        <h1>Sign in to the Web Proxy Firewall console</h1>
+        <p class="lead">Use the seeded admin or viewer account to access the dashboard and operational controls.</p>
+
+        <% if (authError) { %>
+          <div class="flash flash-error"><%= authError %></div>
+        <% } %>
+
+        <form method="post" action="/login" class="login-form">
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" placeholder="<%= emailHint %>" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" name="password" placeholder="Enter your password" required />
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+
+        <div class="login-meta">
+          <div>
+            <strong>Admin</strong>
+            <span><%= emailHint %></span>
+          </div>
+          <div>
+            <strong>Viewer</strong>
+            <span><%= viewerHint %></span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="/js/dashboard.js"></script>
+  </body>
+</html>

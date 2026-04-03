@@ -13,7 +13,6 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -22,7 +21,8 @@ services:
 
   proxy-service:
     build:
-      context: ./proxy-service
+      context: .
+      dockerfile: ./proxy-service/Dockerfile
     container_name: web-proxy-firewall-proxy
     restart: unless-stopped
     depends_on:
@@ -39,7 +39,8 @@ services:
 
   admin-service:
     build:
-      context: ./admin-service
+      context: .
+      dockerfile: ./admin-service/Dockerfile
     container_name: web-proxy-firewall-admin
     restart: unless-stopped
     depends_on:

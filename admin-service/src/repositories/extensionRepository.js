@@ -12,7 +12,32 @@ async function listExtensions() {
   return result.rows;
 }
 
+async function createExtension({ extension, description }) {
+  const result = await query(
+    `INSERT INTO blocked_extensions (extension, description)
+     VALUES ($1, $2)
+     RETURNING id`,
+    [extension, description || null]
+  );
+
+  return result.rows[0];
+}
+
+async function toggleExtension(id) {
+  const result = await query(
+    `UPDATE blocked_extensions
+     SET is_active = NOT is_active
+     WHERE id = $1
+     RETURNING id, is_active`,
+    [id]
+  );
+
+  return result.rows[0] || null;
+}
+
 module.exports = {
   countExtensions,
-  listExtensions
+  listExtensions,
+  createExtension,
+  toggleExtension
 };

@@ -103,6 +103,7 @@ function evaluateRequestRules(parsedRequest, filterData) {
   const whitelistResult = whitelistFilter(parsedRequest, rules);
   if (whitelistResult.matched) {
     return buildDecision('allow', whitelistResult.matchedRule, 'request:whitelist', {
+      matchedRuleId: whitelistResult.matchedRuleId,
       keywords,
       extensions
     });
@@ -111,6 +112,7 @@ function evaluateRequestRules(parsedRequest, filterData) {
   const domainResult = domainFilter(parsedRequest, rules);
   if (domainResult.matched) {
     return buildDecision('block', domainResult.matchedRule, 'request:domain', {
+      matchedRuleId: domainResult.matchedRuleId,
       keywords,
       extensions
     });
@@ -119,6 +121,7 @@ function evaluateRequestRules(parsedRequest, filterData) {
   const urlResult = urlFilter(parsedRequest, rules);
   if (urlResult.matched) {
     return buildDecision('block', urlResult.matchedRule, 'request:url_pattern', {
+      matchedRuleId: urlResult.matchedRuleId,
       keywords,
       extensions
     });

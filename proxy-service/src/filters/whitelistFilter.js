@@ -1,9 +1,7 @@
-function matchesDomain(target, domain) {
-  return domain === target || domain.endsWith(`.${target}`);
-}
+const { appliesToScope, matchesDomain } = require('./ruleScope');
 
 function whitelistFilter(parsedRequest, rules) {
-  const allowRules = rules.filter((rule) => rule.action === 'allow');
+  const allowRules = rules.filter((rule) => rule.action === 'allow' && appliesToScope(rule, parsedRequest));
 
   const matchedRule = allowRules.find((rule) => {
     if (rule.type === 'domain') {
@@ -23,7 +21,8 @@ function whitelistFilter(parsedRequest, rules) {
 
   return {
     matched: true,
-    matchedRule: `${matchedRule.type}:allow:${matchedRule.target}`
+    matchedRule: `${matchedRule.type}:allow:${matchedRule.target}`,
+    matchedRuleId: matchedRule.id
   };
 }
 

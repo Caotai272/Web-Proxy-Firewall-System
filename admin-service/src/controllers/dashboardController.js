@@ -1,5 +1,34 @@
 const dashboardService = require('../services/dashboardService');
 
+function setFlash(req, type, message) {
+  if (!req.session) {
+    return;
+  }
+
+  if (type === 'error') {
+    req.session.flashError = message;
+    return;
+  }
+
+  req.session.flashSuccess = message;
+}
+
+function redirectWithSession(req, res, location, next) {
+  if (!req.session) {
+    res.redirect(location);
+    return;
+  }
+
+  req.session.save((error) => {
+    if (error) {
+      next(error);
+      return;
+    }
+
+    res.redirect(location);
+  });
+}
+
 async function health(req, res) {
   try {
     const stats = await dashboardService.getStats();
@@ -162,6 +191,147 @@ async function getLogSummary(req, res, next) {
   }
 }
 
+async function createRule(req, res, next) {
+  try {
+    const type = String(req.body.type || '').trim();
+    const target = String(req.body.target || '').trim().toLowerCase();
+    const action = String(req.body.action || '').trim();
+    const description = String(req.body.description || '').trim();
+    const priority = Number(req.body.priority);
+    const scopeType = String(req.body.scope_type || 'global').trim();
+    const scopeValue = String(req.body.scope_value || '').trim().toLowerCase();
+
+    if (!['domain', 'url_pattern'].includes(type)) {
+      setFlash(req, 'error', 'Rule type is invalid.');
+      redirectWithSession(req, res, '/rules', next);
+      return;
+    }
+
+    if (!['allow', 'block'].includes(action)) {
+      setFlash(req, 'error', 'Rule action is invalid.');
+      redirectWithSession(req, res, '/rules', next);
+      return;
+    }
+
+    if (!target) {
+      setFlash(req, 'error', 'Rule target is required.');
+      redirectWithSession(req, res, '/rules', next);
+      return;
+    }
+
+    if (!['global', 'request_domain', 'client_ip'].includes(scopeType)) {
+      setFlash(req, 'error', 'Scope type is invalid.');
+      redirectWithSession(req, res, '/rules', next);
+      return;
+    }
+
+    await dashboardService.createRule({
+      type,
+      target,
+      action,
+      description,
+      priority: Number.isFinite(priority) ? priority : 100,
+      scopeType,
+      scopeValue
+    });
+
+    setFlash(req, 'success', `Rule created for ${target}.`);
+  } catch (error) {
+    setFlash(req, 'error', error.message);
+  }
+
+  redirectWithSession(req, res, '/rules', next);
+}
+
+async function toggleRule(req, res, next) {
+  try {
+    const updated = await dashboardService.toggleRule(Number(req.params.id));
+
+    if (!updated) {
+      setFlash(req, 'error', 'Rule not found.');
+    } else {
+      setFlash(req, 'success', `Rule ${updated.is_active ? 'activated' : 'deactivated'}.`);
+    }
+
+    redirectWithSession(req, res, '/rules', next);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createKeyword(req, res, next) {
+  try {
+    const keyword = String(req.body.keyword || '').trim().toLowerCase();
+    const description = String(req.body.description || '').trim();
+
+    if (!keyword) {
+      setFlash(req, 'error', 'Keyword is required.');
+      redirectWithSession(req, res, '/keywords', next);
+      return;
+    }
+
+    await dashboardService.createKeyword({ keyword, description });
+    setFlash(req, 'success', `Keyword ${keyword} added.`);
+  } catch (error) {
+    setFlash(req, 'error', error.message);
+  }
+
+  redirectWithSession(req, res, '/keywords', next);
+}
+
+async function toggleKeyword(req, res, next) {
+  try {
+    const updated = await dashboardService.toggleKeyword(Number(req.params.id));
+
+    if (!updated) {
+      setFlash(req, 'error', 'Keyword not found.');
+    } else {
+      setFlash(req, 'success', `Keyword ${updated.is_active ? 'activated' : 'deactivated'}.`);
+    }
+
+    redirectWithSession(req, res, '/keywords', next);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createExtension(req, res, next) {
+  try {
+    const rawExtension = String(req.body.extension || '').trim().toLowerCase();
+    const extension = rawExtension.startsWith('.') ? rawExtension : `.${rawExtension}`;
+    const description = String(req.body.description || '').trim();
+
+    if (!rawExtension || extension === '.') {
+      setFlash(req, 'error', 'Extension is required.');
+      redirectWithSession(req, res, '/extensions', next);
+      return;
+    }
+
+    await dashboardService.createExtension({ extension, description });
+    setFlash(req, 'success', `Extension ${extension} added.`);
+  } catch (error) {
+    setFlash(req, 'error', error.message);
+  }
+
+  redirectWithSession(req, res, '/extensions', next);
+}
+
+async function toggleExtension(req, res, next) {
+  try {
+    const updated = await dashboardService.toggleExtension(Number(req.params.id));
+
+    if (!updated) {
+      setFlash(req, 'error', 'Extension not found.');
+    } else {
+      setFlash(req, 'success', `Extension ${updated.is_active ? 'activated' : 'deactivated'}.`);
+    }
+
+    redirectWithSession(req, res, '/extensions', next);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   health,
   renderDashboard,
@@ -177,5 +347,11 @@ module.exports = {
   getKeywords,
   getExtensions,
   getLogs,
-  getLogSummary
+  getLogSummary,
+  createRule,
+  toggleRule,
+  createKeyword,
+  toggleKeyword,
+  createExtension,
+  toggleExtension
 };

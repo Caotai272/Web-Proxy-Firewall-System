@@ -3,6 +3,28 @@
   <h2>Keywords</h2>
   <p class="lead">Keyword list used for URL inspection and HTML response scanning.</p>
 </section>
+<section class="card form-card">
+  <div class="panel-head">
+    <div>
+      <p class="kicker">Admin Control</p>
+      <h3>Add Keyword</h3>
+      <p class="table-note">Any active keyword can block a request URL or an HTML response that contains it.</p>
+    </div>
+  </div>
+  <form method="post" action="/keywords" class="admin-form grid-2">
+    <label>
+      <span>Keyword</span>
+      <input type="text" name="keyword" placeholder="gambling" required />
+    </label>
+    <label>
+      <span>Description</span>
+      <input type="text" name="description" placeholder="Why this keyword is restricted" />
+    </label>
+    <div class="field-span-2 action-row">
+      <button type="submit">Add keyword</button>
+    </div>
+  </form>
+</section>
 <section class="card table-card">
   <div class="panel-head">
     <div>
@@ -17,6 +39,8 @@
         <tr>
           <th>Keyword</th>
           <th>Description</th>
+          <th>Status</th>
+          <th>Control</th>
         </tr>
       </thead>
       <tbody>
@@ -29,6 +53,12 @@
               </div>
             </td>
             <td><%= item.description %></td>
+            <td><span class="status-badge <%= item.is_active ? 'active' : 'inactive' %>"><%= item.is_active ? 'active' : 'inactive' %></span></td>
+            <td>
+              <form method="post" action="/keywords/<%= item.id %>/toggle" class="inline-form">
+                <button type="submit" class="button-link secondary"><%= item.is_active ? 'Disable' : 'Enable' %></button>
+              </form>
+            </td>
           </tr>
         <% }) %>
       </tbody>
